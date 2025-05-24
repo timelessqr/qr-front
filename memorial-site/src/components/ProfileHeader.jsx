@@ -5,7 +5,7 @@ const ProfileHeader = () => {
     <div className="relative">
       <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl">
-          <img src="/profile-photo.jpg" alt="Foto de perfil" className="w-full h-full object-cover" />
+          <img src="/img/abuelita.jpg" alt="Foto de perfil" className=" object-cover object-center" />
         </div>
       </div>
       <div className="pt-24 pb-6 px-6 text-center">
@@ -13,8 +13,8 @@ const ProfileHeader = () => {
         <p className="text-gray-600 mt-2 italic font-light text-lg">"El amor y los recuerdos nos mantienen vivos más allá del tiempo."</p>
         <div className="flex items-center justify-center mt-4">
           <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-            <img src="/mexico-flag.png" alt="Bandera de México" className="h-4 w-6 mr-2" />
-            <p className="text-gray-700">Michoacán, México</p>
+             <img src="/img/banderaChile.jpg" alt="Bandera de México" className="h-4 w-6 mr-2" />
+            <p className="text-gray-700">Santiago de Chile</p>
           </div>
         </div>
         <button className="mt-5 inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-full shadow-md transition duration-300">

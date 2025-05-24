@@ -8,7 +8,7 @@ const Historia = () => {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/3">
             <div className="aspect-square rounded-lg overflow-hidden shadow-md mb-4">
-              <img src="/young-photo.jpg" alt="Foto de joven" className="w-full h-full object-cover" />
+              <img src="/img/foto-abuelita-joven.jpg" alt="Foto de joven" className="w-full h-full object-cover" />
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
               <h3 className="font-medium text-gray-800 mb-2">Datos personales</h3>
