@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const Contenido = () => {
   const fotosRecuerdos = [
@@ -10,7 +10,42 @@ const Contenido = () => {
     "recuerdo6.jpg",
     "recuerdo7.jpg",
     "recuerdo8.jpg",
+    "recuerdo8.jpg",
+    "recuerdo7.jpg",
+    "recuerdo6.jpg",
+    "recuerdo5.jpg",
+    "recuerdo4.jpg",
+    "recuerdo3.jpg",
+    "recuerdo2.jpg",
+    "recuerdo1.jpg",
+    // Agrega más nombres de fotos aquí
   ];
+
+  const fotosPorPagina = 8;
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [fade, setFade] = useState(true);
+
+  const totalPaginas = Math.ceil(fotosRecuerdos.length / fotosPorPagina);
+
+  const fotosMostradas = fotosRecuerdos.slice(
+    (paginaActual - 1) * fotosPorPagina,
+    paginaActual * fotosPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setFade(false);
+      setTimeout(() => {
+        setPaginaActual(nuevaPagina);
+        setFade(true);
+      }, 200); // Duración de la transición de salida
+    }
+  };
+
+  useEffect(() => {
+    setFade(true);
+  }, [paginaActual]);
+
   return (
     <div className="animate-fadeIn">
       <div className="bg-white rounded-lg shadow-md">
@@ -34,17 +69,21 @@ const Contenido = () => {
           </button>
         </div>
 
-        {/* Cuadrícula de imágenes horizontal */}
+        {/* Cuadrícula de imágenes con transición */}
         <div className="px-6 pb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {fotosRecuerdos.map((nombre, i) => (
+          <div
+            className={`grid grid-cols-2 md:grid-cols-4 gap-4 transition-opacity duration-300 ${
+              fade ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {fotosMostradas.map((nombre, i) => (
               <div
                 key={i}
                 className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md"
               >
                 <img
                   src={`/img/recuerdos/${nombre}`}
-                  alt={`Recuerdo ${i + 1}`}
+                  alt={`Recuerdo ${(paginaActual - 1) * fotosPorPagina + i + 1}`}
                   className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -57,36 +96,33 @@ const Contenido = () => {
           {/* Paginación horizontal */}
           <div className="flex justify-center mt-8">
             <nav className="inline-flex rounded-md shadow">
-              <a
-                href="#"
-                className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+              <button
+                onClick={() => cambiarPagina(paginaActual - 1)}
+                disabled={paginaActual === 1}
+                className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50"
               >
                 Anterior
-              </a>
-              <a
-                href="#"
-                className="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-700 font-medium"
-              >
-                1
-              </a>
-              <a
-                href="#"
-                className="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-              >
-                2
-              </a>
-              <a
-                href="#"
-                className="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-              >
-                3
-              </a>
-              <a
-                href="#"
-                className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+              </button>
+              {[...Array(totalPaginas)].map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => cambiarPagina(idx + 1)}
+                  className={`px-3 py-2 border-t border-b border-gray-300 bg-white ${
+                    paginaActual === idx + 1
+                      ? "text-gray-700 font-medium"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => cambiarPagina(paginaActual + 1)}
+                disabled={paginaActual === totalPaginas}
+                className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50"
               >
                 Siguiente
-              </a>
+              </button>
             </nav>
           </div>
         </div>
