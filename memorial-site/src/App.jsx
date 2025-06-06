@@ -11,33 +11,34 @@ import Comentarios from "./components/Comentarios";
 
 function App() {
   // Estado para controlar la pestaña activa
-  const [activeTab, setActiveTab] = useState('historia');
+  const [activeTab, setActiveTab] = useState("historia");
 
   // Renderizar el contenido de la pestaña seleccionada
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'historia':
+      case "historia":
         return <Historia />;
-      case 'contenido':
+      case "contenido":
         return <Contenido />;
-      case 'comentarios':
+      case "comentarios":
         return <Comentarios />;
       default:
         return <Historia />;
     }
   };
-  return <div>
-
-    <NavBar/>
-    <Banner/>
-    <ProfileHeader/>
-    <TabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-     {/* Contenido dinámico según la pestaña seleccionada */}
+  return (
+    <div className="min-h-screen flex flex-col">
+      <NavBar />
+      <Banner />
+      <ProfileHeader />
+      <TabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Contenido dinámico según la pestaña seleccionada */}
       <div className="flex-grow container mx-auto px-4 py-8">
         {renderTabContent()}
       </div>
-    <Footer/>
-  </div>;
+      <Footer />
+    </div>
+  );
 }
 
 export default App;

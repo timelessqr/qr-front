@@ -18,12 +18,13 @@ const Contenido = () => {
     "recuerdo3.jpg",
     "recuerdo2.jpg",
     "recuerdo1.jpg",
-    // Agrega más nombres de fotos aquí
   ];
 
   const fotosPorPagina = 8;
   const [paginaActual, setPaginaActual] = useState(1);
   const [fade, setFade] = useState(true);
+  const [imagenAmpliada, setImagenAmpliada] = useState(null);
+  const [modalAnimation, setModalAnimation] = useState(false);
 
   const totalPaginas = Math.ceil(fotosRecuerdos.length / fotosPorPagina);
 
@@ -38,8 +39,20 @@ const Contenido = () => {
       setTimeout(() => {
         setPaginaActual(nuevaPagina);
         setFade(true);
-      }, 200); // Duración de la transición de salida
+      }, 200);
     }
+  };
+
+  const abrirImagen = (nombreImagen) => {
+    setImagenAmpliada(nombreImagen);
+    setModalAnimation(true);
+  };
+
+  const cerrarImagen = () => {
+    setModalAnimation(false);
+    setTimeout(() => {
+      setImagenAmpliada(null);
+    }, 300); // Debe coincidir con la duración de la animación
   };
 
   useEffect(() => {
@@ -48,6 +61,43 @@ const Contenido = () => {
 
   return (
     <div className="animate-fadeIn">
+      {/* Modal para imagen ampliada con transiciones */}
+      {imagenAmpliada && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+            modalAnimation
+              ? "bg-opacity-100 backdrop-blur-sm"
+              : "bg-opacity-0 backdrop-blur-0"
+          }`}
+          style={{ backgroundColor: "rgba(0,0,0,0.9)" }}
+          onClick={cerrarImagen}
+        >
+          <div
+            className={`relative max-w-4xl w-full transform transition-all duration-300 ${
+              modalAnimation
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-90"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={cerrarImagen}
+              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 transition-colors duration-200"
+            >
+              &times;
+            </button>
+            <img
+              src={`/img/recuerdos/${imagenAmpliada}`}
+              alt="Imagen ampliada"
+              className="w-full max-h-[80vh] object-contain"
+            />
+            <div className="text-white text-center mt-4 text-lg">
+              {imagenAmpliada.replace(".jpg", "")}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center pt-4">
           Galería de recuerdos
@@ -79,7 +129,8 @@ const Contenido = () => {
             {fotosMostradas.map((nombre, i) => (
               <div
                 key={i}
-                className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md"
+                className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
+                onClick={() => abrirImagen(nombre)}
               >
                 <img
                   src={`/img/recuerdos/${nombre}`}
@@ -99,7 +150,7 @@ const Contenido = () => {
               <button
                 onClick={() => cambiarPagina(paginaActual - 1)}
                 disabled={paginaActual === 1}
-                className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
               >
                 Anterior
               </button>
@@ -107,7 +158,7 @@ const Contenido = () => {
                 <button
                   key={idx}
                   onClick={() => cambiarPagina(idx + 1)}
-                  className={`px-3 py-2 border-t border-b border-gray-300 bg-white ${
+                  className={`px-3 py-2 border-t border-b border-gray-300 bg-white transition-colors duration-200 ${
                     paginaActual === idx + 1
                       ? "text-gray-700 font-medium"
                       : "text-gray-500 hover:bg-gray-50"
@@ -119,7 +170,7 @@ const Contenido = () => {
               <button
                 onClick={() => cambiarPagina(paginaActual + 1)}
                 disabled={paginaActual === totalPaginas}
-                className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
               >
                 Siguiente
               </button>
