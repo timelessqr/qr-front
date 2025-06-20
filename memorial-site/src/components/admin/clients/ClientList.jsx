@@ -95,14 +95,11 @@ const ClientList = () => {
   };
 
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div>
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="md:flex md:items-center md:justify-between mb-6">
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-              Clientes
-            </h2>
             <p className="mt-1 text-sm text-gray-500">
               Gestiona los clientes registrados en el sistema
             </p>
@@ -192,38 +189,42 @@ const ClientList = () => {
           ) : (
             <ul className="divide-y divide-gray-200">
               {clients.map((client) => (
-                <li key={client.id || client._id}>
-                  <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <li key={client.id || client._id} className="hover:bg-gray-50 transition-colors duration-150">
+                  <div className="px-6 py-5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-medium">
+                      <div className="flex items-center flex-1">
+                        <div className="flex-shrink-0">
+                          <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+                            <span className="text-white font-bold text-xl">
                               {client.nombre?.charAt(0)?.toUpperCase() || 'C'}
                             </span>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="flex items-center">
-                            <p className="text-sm font-medium text-gray-900">
-                              {client.nombre && client.apellido 
-                                ? `${client.nombre} ${client.apellido}`
-                                : client.nombre || 'Cliente sin nombre'
-                              }
-                            </p>
-                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {client.codigoCliente || client.codigo || 'Sin código'}
-                            </span>
+                        <div className="ml-6 flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                {client.nombre && client.apellido 
+                                  ? `${client.nombre} ${client.apellido}`
+                                  : client.nombre || 'Cliente sin nombre'
+                                }
+                              </h3>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  {client.codigoCliente || client.codigo || 'Sin código'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-1">
+                                {client.telefono} • {client.email}
+                              </p>
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>Registrado: {formatDate(client.fechaRegistro || client.createdAt)}</span>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-500">
-                            {client.telefono} • {client.email}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                          Registrado: {formatDate(client.fechaRegistro || client.createdAt)}
-                          </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3 ml-6">
                         <button
                           onClick={() => {
                             const clientId = client.id || client._id;
@@ -231,8 +232,13 @@ const ClientList = () => {
                               navigate(`/admin/clients/${clientId}`);
                             }
                           }}
-                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg shadow-sm transition-colors duration-200"
+                          title="Ver detalles del cliente"
                         >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
                           Ver
                         </button>
                         
@@ -269,62 +275,42 @@ const ClientList = () => {
                                     alert('Error: No se puede obtener un ID válido del cliente. Ver consola para debug.');
                                   }
                                 }}
-                                className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-sm transition-colors duration-200"
+                                title="Crear memorial"
                               >
-                                Crear Memorial
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                Memorial
                               </button>
                             );
                           } else if (memorialCount === 1) {
-                            // Tiene 1 memorial - botón para ver o crear otro
+                            // Tiene 1 memorial - botón para ver
                             return (
-                              <>
-                                <button
-                                  onClick={() => navigate('/admin/memorials')}
-                                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                  Ver Memorial
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (window.confirm('¿Este cliente ya tiene un memorial. ¿Quieres crear otro memorial adicional? (por ejemplo, para otro familiar)'))
-                                    {
-                                      const clientId = client.id || client._id;
-                                      if (clientId) {
-                                        navigate(`/admin/memorials/new/${clientId}`);
-                                      }
-                                    }
-                                  }}
-                                  className="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-orange-500 hover:bg-orange-600"
-                                >
-                                  + Otro
-                                </button>
-                              </>
+                              <button
+                                onClick={() => navigate('/admin/memorials')}
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-colors duration-200"
+                                title="Ver memorial"
+                              >
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                Memorial
+                              </button>
                             );
                           } else {
                             // Tiene múltiples memoriales
                             return (
-                              <>
-                                <button
-                                  onClick={() => navigate('/admin/memorials')}
-                                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                  Ver {memorialCount} Memoriales
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (window.confirm(`Este cliente ya tiene ${memorialCount} memoriales. ¿Quieres crear otro memorial adicional?`))
-                                    {
-                                      const clientId = client.id || client._id;
-                                      if (clientId) {
-                                        navigate(`/admin/memorials/new/${clientId}`);
-                                      }
-                                    }
-                                  }}
-                                  className="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-orange-500 hover:bg-orange-600"
-                                >
-                                  + Otro
-                                </button>
-                              </>
+                              <button
+                                onClick={() => navigate('/admin/memorials')}
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-colors duration-200"
+                                title={`Ver ${memorialCount} memoriales`}
+                              >
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                {memorialCount} Memorial{memorialCount > 1 ? 'es' : ''}
+                              </button>
                             );
                           }
                         })()}
@@ -332,12 +318,31 @@ const ClientList = () => {
                         <button
                           onClick={() => {
                             const clientId = client.id || client._id;
+                            if (clientId) {
+                              navigate(`/admin/clients/${clientId}/edit`);
+                            }
+                          }}
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg shadow-sm transition-colors duration-200"
+                          title="Editar cliente"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            const clientId = client.id || client._id;
                             if (clientId && window.confirm('¿Está seguro de eliminar este cliente?')) {
                               handleDeleteClient(clientId);
                             }
                           }}
-                          className="inline-flex items-center px-3 py-1 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors duration-200"
+                          title="Eliminar cliente"
                         >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                           Eliminar
                         </button>
                       </div>

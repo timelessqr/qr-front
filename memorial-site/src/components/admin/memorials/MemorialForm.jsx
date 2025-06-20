@@ -227,16 +227,25 @@ const MemorialForm = () => {
       }
       
       // 🔧 FIX: Formatear fechas correctamente para el backend
+      const formatDateForBackend = (dateString) => {
+        if (!dateString) return null;
+        
+        // Si ya está en formato ISO, extraer solo la fecha
+        if (dateString.includes('T')) {
+          dateString = dateString.split('T')[0];
+        }
+        
+        // Crear fecha en zona horaria local y convertir a ISO con mediodía UTC
+        // Esto evita problemas de zona horaria
+        const date = new Date(dateString + 'T12:00:00.000Z');
+        return date.toISOString();
+      };
+      
       const memorialData = {
         ...formData,
         clientId: finalClientId,
-        // Asegurar que las fechas estén en formato ISO correcto
-        fechaNacimiento: formData.fechaNacimiento ? 
-          new Date(formData.fechaNacimiento + 'T12:00:00.000Z').toISOString() : 
-          null,
-        fechaFallecimiento: formData.fechaFallecimiento ? 
-          new Date(formData.fechaFallecimiento + 'T12:00:00.000Z').toISOString() : 
-          null
+        fechaNacimiento: formatDateForBackend(formData.fechaNacimiento),
+        fechaFallecimiento: formatDateForBackend(formData.fechaFallecimiento)
       };
       
       console.log('=== FECHAS FORMATEADAS ===');
@@ -282,8 +291,8 @@ const MemorialForm = () => {
 
   if (loading) {
     return (
-      <div className="py-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div>
+        <div className="max-w-4xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
             <div className="bg-white p-6 rounded-lg shadow">
@@ -303,8 +312,8 @@ const MemorialForm = () => {
   }
 
   return (
-    <div className="py-6">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div>
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <nav className="flex mb-4" aria-label="Breadcrumb">

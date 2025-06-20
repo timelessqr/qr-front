@@ -1,4 +1,13 @@
-#root {
+/* Resetear estilos para el panel administrativo */
+.admin-layout #root {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+/* Estilos por defecto para páginas no-admin */
+.default-layout #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;

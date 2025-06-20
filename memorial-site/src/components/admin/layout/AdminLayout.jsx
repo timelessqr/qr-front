@@ -23,35 +23,42 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar para móvil */}
-      <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? '' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-          <Sidebar onClose={() => setSidebarOpen(false)} />
+    <div className="h-screen flex bg-gray-50 overflow-hidden">
+      {/* Sidebar para móvil - Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-75" 
+            onClick={() => setSidebarOpen(false)} 
+          />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+            <Sidebar onClose={() => setSidebarOpen(false)} />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Sidebar para desktop */}
+      {/* Sidebar para desktop - Fijo a la izquierda */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="flex flex-col w-64">
+        <div className="flex flex-col w-64 border-r border-gray-200">
           <Sidebar />
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="lg:pl-64 flex flex-col flex-1">
-        {/* Header */}
+      {/* Área principal - Header + Contenido */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header - Altura fija y compacta */}
         <Header 
           user={user}
           onMenuClick={() => setSidebarOpen(true)}
           onLogout={handleLogout}
         />
 
-        {/* Contenido de la página */}
-        <main className="flex-1 pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Outlet />
+        {/* Contenido principal - Scrolleable */}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="py-6">
+            <div className="px-4 sm:px-6 lg:px-8">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

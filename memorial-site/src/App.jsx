@@ -1,8 +1,8 @@
 // ====================================
 // src/App.jsx - Aplicación principal con routing integrado
 // ====================================
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/admin/auth/ProtectedRoute';
 import AdminLayout from './components/admin/layout/AdminLayout';
@@ -31,6 +31,32 @@ import Contenido from './components/Contenido';
 import Comentarios from './components/Comentarios';
 
 import './App.css';
+
+// 🔧 NUEVO: Componente para manejar clases CSS del body
+const BodyClassManager = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const body = document.body;
+    
+    // Limpiar clases anteriores
+    body.classList.remove('admin-layout', 'default-layout');
+    
+    // Aplicar clase según la ruta
+    if (location.pathname.startsWith('/admin')) {
+      body.classList.add('admin-layout');
+    } else {
+      body.classList.add('default-layout');
+    }
+    
+    // Cleanup al desmontar
+    return () => {
+      body.classList.remove('admin-layout', 'default-layout');
+    };
+  }, [location.pathname]);
+  
+  return null;
+};
 
 // Página de inicio temporal (puedes personalizarla)
 const HomePage = () => {
@@ -84,6 +110,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
+          <BodyClassManager />
           <Routes>
             {/* Ruta de inicio */}
             <Route path="/" element={<HomePage />} />

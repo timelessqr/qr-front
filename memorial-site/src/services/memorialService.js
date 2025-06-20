@@ -77,9 +77,20 @@ class MemorialService {
   // 🗑️ Eliminar memorial
   async deleteMemorial(memorialId) {
     try {
+      console.log('=== DEBUG deleteMemorial ===');
+      console.log('Memorial ID a eliminar:', memorialId);
+      console.log('URL de eliminación:', `/profiles/${memorialId}`);
+      
       const response = await api.delete(`/profiles/${memorialId}`);
-      return getApiData(response);
+      console.log('Respuesta del backend:', response);
+      
+      const result = getApiData(response);
+      console.log('Resultado procesado:', result);
+      
+      return result;
     } catch (error) {
+      console.error('Error en deleteMemorial:', error);
+      console.error('Error response:', error.response);
       throw new Error(handleApiError(error));
     }
   }

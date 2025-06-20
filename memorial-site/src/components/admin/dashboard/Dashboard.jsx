@@ -72,8 +72,8 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div>
+        <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -91,14 +91,21 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div>
+      <div className="max-w-7xl mx-auto">
+        {/* 🔧 FIX: Asegurar que no haya elementos con altura excesiva */}
+        <style jsx>{`
+          .dashboard-container * {
+            max-height: none;
+          }
+          .dashboard-container .overflow-hidden {
+            max-height: fit-content;
+          }
+        `}</style>
+        <div className="dashboard-container">
         {/* Header */}
         <div className="md:flex md:items-center md:justify-between mb-6">
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-              Dashboard
-            </h2>
             <p className="mt-1 text-sm text-gray-500">
               Resumen general del sistema de memoriales digitales
             </p>
@@ -199,6 +206,7 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
