@@ -1,6 +1,6 @@
 import React from 'react'
 
-const ProfileHeader = () => {
+const ProfileHeader = ({ memorialData }) => {
   return (
     <div className="relative">
       <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
@@ -9,12 +9,21 @@ const ProfileHeader = () => {
         </div>
       </div>
       <div className="pt-24 pb-6 px-6 text-center">
-        <h1 className="text-3xl font-bold text-gray-900">María Salud Ramírez Caballero</h1>
-        <p className="text-gray-600 mt-2 italic font-light text-lg">"El amor y los recuerdos nos mantienen vivos más allá del tiempo."</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {memorialData?.nombre || 'Nombre no disponible'}
+        </h1>
+        <p className="text-gray-600 mt-2 italic font-light text-lg">
+          "{memorialData?.frase || 'El amor y los recuerdos nos mantienen vivos más allá del tiempo.'}"
+        </p>
         <div className="flex items-center justify-center mt-4">
           <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-             <img src="/img/banderaChile.jpg" alt="Bandera de México" className="h-4 w-6 mr-2" />
-            <p className="text-gray-700">Santiago de Chile</p>
+            <img src="/img/banderaChile.jpg" alt="Bandera del país" className="h-4 w-6 mr-2" />
+            <p className="text-gray-700">
+              {memorialData?.ubicacion?.ciudad && memorialData?.ubicacion?.pais
+                ? `${memorialData.ubicacion.ciudad}, ${memorialData.ubicacion.pais}`
+                : 'Ubicación no especificada'
+              }
+            </p>
           </div>
         </div>
         <button className="mt-5 inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-full shadow-md transition duration-300">

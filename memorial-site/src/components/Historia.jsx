@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Historia = () => {
+const Historia = ({ memorialData }) => {
   return (
     <div className="animate-fadeIn">
       <div className="bg-orange-50 rounded-lg p-6 border border-orange-100">
@@ -13,51 +13,63 @@ const Historia = () => {
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
               <h3 className="font-medium text-gray-800 mb-2">Datos personales</h3>
               <ul className="space-y-2 text-gray-700">
-                <li className="flex">
-                  <span className="font-medium w-24">Nacimiento:</span>
-                  <span>15 mayo 1938</span>
-                </li>
-                <li className="flex">
-                  <span className="font-medium w-24">Fallecimiento:</span>
-                  <span>23 octubre 2024</span>
-                </li>
-                <li className="flex">
-                  <span className="font-medium w-24">Profesión:</span>
-                  <span>Artesana</span>
-                </li>
-                <li className="flex">
-                  <span className="font-medium w-24">Familia:</span>
-                  <span>8 hijos, 25 nietos</span>
-                </li>
+                {memorialData?.fechaNacimiento && (
+                  <li className="flex">
+                    <span className="font-medium w-24">Nacimiento:</span>
+                    <span>{new Date(memorialData.fechaNacimiento).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  </li>
+                )}
+                {memorialData?.fechaFallecimiento && (
+                  <li className="flex">
+                    <span className="font-medium w-24">Fallecimiento:</span>
+                    <span>{new Date(memorialData.fechaFallecimiento).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  </li>
+                )}
+                {memorialData?.edadAlFallecer && (
+                  <li className="flex">
+                    <span className="font-medium w-24">Edad:</span>
+                    <span>{memorialData.edadAlFallecer} años</span>
+                  </li>
+                )}
+                {memorialData?.profesion && (
+                  <li className="flex">
+                    <span className="font-medium w-24">Profesión:</span>
+                    <span>{memorialData.profesion}</span>
+                  </li>
+                )}
+                {memorialData?.familia?.hijos && (
+                  <li className="flex">
+                    <span className="font-medium w-24">Hijos:</span>
+                    <span>{memorialData.familia.hijos.join(', ')}</span>
+                  </li>
+                )}
+                {memorialData?.familia?.conyuge && (
+                  <li className="flex">
+                    <span className="font-medium w-24">Cónyuge:</span>
+                    <span>{memorialData.familia.conyuge}</span>
+                  </li>
+                )}
               </ul>
             </div>
           </div>
           
           <div className="md:w-2/3">
             <div className="prose max-w-none text-gray-700">
-              <p className="text-lg leading-relaxed">
-                María Salud nació en un pequeño pueblo de Santa Fe de la Laguna, Michoacán, donde vivió toda su vida cultivando las tradiciones y el arte de su tierra natal.
-              </p>
-              
-              <p className="mt-4">
-                Conocida por todos como "Mamá Salud", fue una mujer extraordinaria cuya sonrisa iluminaba cada habitación. Se dedicó a la artesanía tradicional purépecha, creando hermosas piezas de barro que se exhiben en museos de todo México.
-              </p>
-              
-              <p className="mt-4">
-                Su vida transcurrió entre el trabajo honesto, el cuidado de su numerosa familia y la preservación de las tradiciones indígenas. Aprendió el arte de la alfarería de su madre a los 8 años y lo perfeccionó a lo largo de su vida, convirtiéndose en una maestra reconocida que compartió sus conocimientos con generaciones más jóvenes.
-              </p>
-              
-              <p className="mt-4">
-                En 2015, su rostro y espíritu inspiraron a los creadores de una famosa película de animación, inmortalizando su imagen y haciendo que su calidez y sabiduría fueran conocidas en todo el mundo.
-              </p>
-              
-              <p className="mt-4">
-                María Salud fue también guardiana de la medicina tradicional, conocedora de hierbas curativas y remedios ancestrales que utilizaba para ayudar a los enfermos de su comunidad. Su generosidad no conocía límites, siempre dispuesta a compartir lo poco o mucho que tenía con quien lo necesitara.
-              </p>
-              
-              <p className="mt-4">
-                Nos dejó un 23 de octubre de 2024, rodeada de sus seres queridos, pero su legado cultural y espiritual permanecerá vivo en cada pieza de artesanía, en cada historia contada sobre ella y en los corazones de quienes tuvieron el privilegio de conocerla.
-              </p>
+              <div className="prose max-w-none text-gray-700">
+                {memorialData?.biografia ? (
+                  memorialData.biografia.split('\n').map((paragraph, index) => (
+                    paragraph.trim() && (
+                      <p key={index} className="text-lg leading-relaxed mt-4 first:mt-0">
+                        {paragraph}
+                      </p>
+                    )
+                  ))
+                ) : (
+                  <p className="text-lg leading-relaxed text-gray-500">
+                    No hay biografía disponible para este memorial.
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="flex justify-end mt-6">
