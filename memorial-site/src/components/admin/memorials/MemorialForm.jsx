@@ -204,10 +204,13 @@ const MemorialForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    console.log('=== ENVIANDO MEMORIAL ===');
+    console.log('🚀 INICIANDO SUBMIT DEL MEMORIAL');
+    console.log('=== SUBMIT DEBUG ===');
     console.log('clientId de params:', clientId);
     console.log('clientId de formData:', formData.clientId);
+    console.log('isEdit:', isEdit);
     console.log('formData completo:', formData);
+    console.log('===================');
     
     // 🚨 DEBUG: Verificar fechas antes de enviar
     console.log('=== DEBUG FECHAS ===');
@@ -263,20 +266,44 @@ const MemorialForm = () => {
       }
       
       console.log('Memorial procesado exitosamente:', memorial);
+      console.log('🔍 DEBUG: Estructura del memorial devuelto:');
+      console.log('memorial.id:', memorial.id);
+      console.log('memorial._id:', memorial._id);
+      console.log('memorial.qr:', memorial.qr);
+      console.log('Todas las propiedades:', Object.keys(memorial));
       
-      // Generar QR automáticamente si es nuevo memorial
-      if (!isEdit) {
+      // 🔧 FIX: El QR ya se genera automáticamente en el backend
+      // No necesitamos generarlo de nuevo aquí
+      let qrAlreadyGenerated = false;
+      if (!isEdit && memorial.qr && memorial.qr.url) {
+        console.log('✅ QR ya generado automáticamente:', memorial.qr.url);
+        console.log('🎯 ¿Contiene IP correcta?:', memorial.qr.url.includes('192.168.1.34'));
+        setQrGenerated(true);
+        qrAlreadyGenerated = true;
+      }
+      
+      // Solo intentar generar QR si no se generó automáticamente
+      if (!isEdit && !qrAlreadyGenerated) {
         try {
-          await qrService.generateQR(memorial._id);
+          const memorialId = memorial.id || memorial._id;
+          console.log('🎯 Generando QR manual para memorial ID:', memorialId);
+          const qrResponse = await qrService.generateQR(memorialId);
+          console.log('🗺️ Respuesta del QR generado:', qrResponse);
+          console.log('🗺️ URL del QR:', qrResponse?.url);
+          console.log('🗺️ Código del QR:', qrResponse?.code);
           setQrGenerated(true);
         } catch (qrError) {
-          console.warn('No se pudo generar QR automáticamente:', qrError);
+          console.warn('No se pudo generar QR manualmente:', qrError);
+          // Si falla la generación manual, no es problema crítico
         }
       }
       
       // Redirigir a la lista de memoriales o mostrar QR
       if (qrGenerated && !isEdit) {
-        navigate(`/admin/memorials/${memorial._id}/print-qr`);
+        // 🔧 FIX: Usar el ID del memorial para redirección
+        const memorialId = memorial.id || memorial._id;
+        console.log('🎯 Redirigiendo a impresión QR para memorial:', memorialId);
+        navigate(`/admin/memorials/${memorialId}/print-qr`);
       } else {
         navigate('/admin/memorials');
       }

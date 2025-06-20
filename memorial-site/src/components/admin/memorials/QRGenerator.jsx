@@ -81,7 +81,18 @@ const QRGenerator = () => {
     }
   };
 
-  const memorialURL = qrData ? `${window.location.origin}/memorial/${qrData.code}` : '';
+  // 🔧 FIX: Usar la URL que viene del backend en lugar de reconstruirla
+  // El backend ya envía la URL con la IP correcta
+  const memorialURL = qrData?.url || (qrData ? `${window.location.origin}/memorial/${qrData.code}` : '');
+  
+  // 🔍 DEBUG: Verificar qué URL se está usando
+  if (qrData) {
+    console.log('🎯 URL DEBUG en QRGenerator:');
+    console.log('qrData.url (del backend):', qrData.url);
+    console.log('window.location.origin:', window.location.origin);
+    console.log('memorialURL final:', memorialURL);
+    console.log('¿Usando IP correcta?:', memorialURL.includes('192.168.1.34'));
+  }
 
   if (loading) {
     return (

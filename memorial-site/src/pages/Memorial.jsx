@@ -36,9 +36,24 @@ const Memorial = () => {
       setLoading(true);
       setError('');
       
+      console.log('📋 DEBUG: Cargando memorial público');
+      console.log('qrCode:', qrCode);
+      
+      // 🔧 FIX: Usar variable de entorno en lugar de localhost hardcodeado
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const baseUrl = apiUrl.replace('/api', ''); // Remover /api del final si existe
+      const requestUrl = `${baseUrl}/api/memorial/${qrCode}`;
+      
+      console.log('🔗 API URL configurada:', apiUrl);
+      console.log('🔗 Base URL:', baseUrl);
+      console.log('🔗 Request URL final:', requestUrl);
+      
       // Usar el servicio para obtener datos del memorial
-      const response = await fetch(`http://localhost:3000/api/memorial/${qrCode}`);
+      const response = await fetch(requestUrl);
+      console.log('📡 Response status:', response.status);
+      
       const data = await response.json();
+      console.log('📊 Response data:', data);
       
       if (data.success) {
         setMemorialData(data.data);
@@ -52,7 +67,7 @@ const Memorial = () => {
       }
     } catch (err) {
       setError(err.message);
-      console.error('Error cargando memorial:', err);
+      console.error('❌ Error cargando memorial:', err);
     } finally {
       setLoading(false);
     }
