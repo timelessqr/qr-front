@@ -26,16 +26,25 @@ const QRGenerator = () => {
       setLoading(true);
       setError('');
       
+      console.log('=== DEBUG loadMemorialAndQR ===');
+      console.log('memorialId:', memorialId);
+      
       // Cargar datos del memorial
       const memorialData = await memorialService.getMemorialById(memorialId);
+      console.log('Memorial data recibida:', memorialData);
       setMemorial(memorialData);
       
       // Si ya tiene QR, mostrarlo
       if (memorialData.qr) {
+        console.log('QR data encontrada:', memorialData.qr);
+        console.log('Propiedades del QR:', Object.keys(memorialData.qr));
         setQrData(memorialData.qr);
+      } else {
+        console.log('No se encontró QR en el memorial');
       }
       
     } catch (err) {
+      console.error('Error en loadMemorialAndQR:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -263,17 +272,49 @@ const QRGenerator = () => {
 
                   {/* QR Code */}
                   <div className="mb-6">
-                    {qrData.qrImageUrl ? (
+                    {/* 🚨 DEBUG: Ver qué datos del QR están llegando */}
+                    {console.log('=== DEBUG QR DATA ===') || 
+                     console.log('qrData completo:', qrData) || 
+                     console.log('qrImageUrl:', qrData.qrImageUrl) || 
+                     console.log('qrImage:', qrData.qrImage) || 
+                     console.log('Todas las propiedades de qrData:', Object.keys(qrData))}
+                    
+                    {/* 🔧 FIX: Intentar múltiples fuentes de imagen QR */}
+                    {qrData.qrImageUrl || qrData.qrImage || qrData.image ? (
                       <img
-                        src={qrData.qrImageUrl}
+                        src={qrData.qrImageUrl || qrData.qrImage || qrData.image}
                         alt="Código QR"
                         className="mx-auto w-48 h-48 border-2 border-gray-200 rounded"
+                        onError={(e) => {
+                          console.error('Error cargando imagen QR:', e);
+                          // Si falla la imagen, mostrar el QR generado del lado del cliente
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
                       />
-                    ) : (
-                      <div className="mx-auto w-48 h-48 border-2 border-gray-200 rounded flex items-center justify-center bg-gray-100">
+                    ) : null}
+                    
+                    {/* 🔧 FALLBACK: QR generado del lado del cliente */}
+                    <div 
+                      id="client-qr" 
+                      className="mx-auto w-48 h-48 border-2 border-gray-200 rounded flex items-center justify-center bg-gray-100"
+                      style={{ display: qrData.qrImageUrl || qrData.qrImage || qrData.image ? 'none' : 'block' }}
+                    >
+                      {qrData.code ? (
+                        <div className="text-center">
+                          {/* Generar QR usando una librería del lado del cliente */}
+                          <iframe
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(memorialURL)}`}
+                            width="192"
+                            height="192"
+                            style={{ border: 'none' }}
+                            title="Código QR"
+                          ></iframe>
+                        </div>
+                      ) : (
                         <p className="text-gray-500">QR Code</p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {/* Información */}

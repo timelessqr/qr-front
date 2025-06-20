@@ -66,5 +66,42 @@ export const handleApiError = (error) => {
 
 // Helpers para formatear respuestas
 export const getApiData = (response) => {
-  return response.data?.data || response.data;
+  console.log('=== DEBUG getApiData ===');
+  console.log('Response completa:', response);
+  console.log('response.data:', response.data);
+  
+  const data = response.data?.data || response.data;
+  console.log('Data extraída:', data);
+  
+  // 🔧 NUEVO: Normalizar estructura de datos según endpoint
+  if (data && typeof data === 'object') {
+    // Para endpoints que devuelven listas paginadas
+    if (data.clients) {
+      console.log('→ Detectado endpoint de clientes');
+      return {
+        clients: data.clients,
+        pagination: data.pagination
+      };
+    }
+    
+    if (data.profiles) {
+      console.log('→ Detectado endpoint de profiles/memoriales');
+      return {
+        profiles: data.profiles,
+        pagination: data.pagination
+      };
+    }
+    
+    // Para arrays directos
+    if (Array.isArray(data)) {
+      console.log('→ Detectado array directo');
+      return data;
+    }
+    
+    // Para objetos individuales
+    console.log('→ Devolviendo objeto individual');
+    return data;
+  }
+  
+  return data;
 };

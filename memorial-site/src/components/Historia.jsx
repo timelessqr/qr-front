@@ -8,7 +8,16 @@ const Historia = ({ memorialData }) => {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/3">
             <div className="aspect-square rounded-lg overflow-hidden shadow-md mb-4">
-              <img src="/img/foto-abuelita-joven.jpg" alt="Foto de joven" className="w-full h-full object-cover" />
+              {/* 🔧 FIX: Usar foto real del memorial */}
+              <img 
+                src={memorialData?.fotoPerfil || memorialData?.galeria?.[0]?.url || '/img/default-profile.jpg'} 
+                alt={`Foto de ${memorialData?.nombre || 'joven'}`} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback a imagen por defecto si la imagen del memorial falla
+                  e.target.src = '/img/foto-abuelita-joven.jpg';
+                }}
+              />
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
               <h3 className="font-medium text-gray-800 mb-2">Datos personales</h3>

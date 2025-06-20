@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '../../../hooks';
+import { memorialService } from '../../../services'; // 🔧 NUEVO: Para verificar memoriales existentes
 
 const ClientList = () => {
   const navigate = useNavigate();
@@ -25,6 +26,34 @@ const ClientList = () => {
       console.log('Campos disponibles:', Object.keys(clients[0]));
       console.log('ID del primer cliente:', clients[0].id || clients[0]._id);
     }
+  }, [clients]);
+  
+  // 🔧 NUEVO: Verificar cuántos memoriales tiene cada cliente
+  const [clientMemorials, setClientMemorials] = useState({});
+  
+  useEffect(() => {
+    // Cargar conteo de memoriales para cada cliente
+    const loadClientMemorials = async () => {
+      if (clients.length > 0) {
+        const memorialCounts = {};
+        for (const client of clients) {
+          const clientId = client.id || client._id;
+          if (clientId) {
+            try {
+              // Llamar al backend para obtener memoriales del cliente
+              const memorials = await memorialService.getClientMemorials(clientId);
+              memorialCounts[clientId] = memorials.length;
+            } catch (error) {
+              console.warn('Error cargando memoriales para cliente', clientId, error);
+              memorialCounts[clientId] = 0;
+            }
+          }
+        }
+        setClientMemorials(memorialCounts);
+      }
+    };
+    
+    loadClientMemorials();
   }, [clients]);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -206,21 +235,100 @@ const ClientList = () => {
                         >
                           Ver
                         </button>
-                        <button
-                          onClick={() => {
-                            console.log('Cliente seleccionado:', client);
-                            console.log('ID del cliente:', client.id || client._id);
-                            const clientId = client.id || client._id;
-                            if (clientId) {
-                              navigate(`/admin/memorials/new/${clientId}`);
-                            } else {
-                              alert('Error: No se puede obtener el ID del cliente');
-                            }
-                          }}
-                          className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-                        >
-                          Crear Memorial
-                        </button>
+                        
+                        {/* 🔧 NUEVO: Botón inteligente de memorial */}
+                        {(() => {
+                          const clientId = client.id || client._id;
+                          const memorialCount = clientMemorials[clientId] || 0;
+                          
+                          if (memorialCount === 0) {
+                            // No tiene memoriales - botón normal
+                            return (
+                              <button
+                                onClick={() => {
+                                  console.log('=== DEBUG CREAR MEMORIAL ===');
+                                  console.log('Cliente completo:', client);
+                                  console.log('Propiedades disponibles:', Object.keys(client));
+                                  console.log('client.id:', client.id);
+                                  console.log('client._id:', client._id);
+                                  
+                                  // 🔧 FIX: Múltiples estrategias para obtener ID
+                                  const clientId = client.id || client._id || client.clientId;
+                                  
+                                  console.log('ID encontrado:', clientId);
+                                  console.log('Tipo de ID:', typeof clientId);
+                                  
+                                  if (clientId && clientId !== 'undefined' && clientId !== '') {
+                                    console.log(`✅ Navegando a: /admin/memorials/new/${clientId}`);
+                                    navigate(`/admin/memorials/new/${clientId}`);
+                                  } else {
+                                    console.error('❌ ID no válido:', {
+                                      clientId,
+                                      clientObject: client
+                                    });
+                                    alert('Error: No se puede obtener un ID válido del cliente. Ver consola para debug.');
+                                  }
+                                }}
+                                className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                              >
+                                Crear Memorial
+                              </button>
+                            );
+                          } else if (memorialCount === 1) {
+                            // Tiene 1 memorial - botón para ver o crear otro
+                            return (
+                              <>
+                                <button
+                                  onClick={() => navigate('/admin/memorials')}
+                                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                >
+                                  Ver Memorial
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm('¿Este cliente ya tiene un memorial. ¿Quieres crear otro memorial adicional? (por ejemplo, para otro familiar)'))
+                                    {
+                                      const clientId = client.id || client._id;
+                                      if (clientId) {
+                                        navigate(`/admin/memorials/new/${clientId}`);
+                                      }
+                                    }
+                                  }}
+                                  className="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-orange-500 hover:bg-orange-600"
+                                >
+                                  + Otro
+                                </button>
+                              </>
+                            );
+                          } else {
+                            // Tiene múltiples memoriales
+                            return (
+                              <>
+                                <button
+                                  onClick={() => navigate('/admin/memorials')}
+                                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                >
+                                  Ver {memorialCount} Memoriales
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm(`Este cliente ya tiene ${memorialCount} memoriales. ¿Quieres crear otro memorial adicional?`))
+                                    {
+                                      const clientId = client.id || client._id;
+                                      if (clientId) {
+                                        navigate(`/admin/memorials/new/${clientId}`);
+                                      }
+                                    }
+                                  }}
+                                  className="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-orange-500 hover:bg-orange-600"
+                                >
+                                  + Otro
+                                </button>
+                              </>
+                            );
+                          }
+                        })()}
+                        
                         <button
                           onClick={() => {
                             const clientId = client.id || client._id;

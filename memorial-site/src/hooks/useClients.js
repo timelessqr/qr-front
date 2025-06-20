@@ -29,7 +29,22 @@ export const useClients = (autoLoad = true) => {
 
       const data = await clientService.getClients(requestParams);
       
-      setClients(data.clients || data);
+      // 🚨 DEBUG: Ver estructura de datos del backend
+      console.log('=== DEBUG useClients loadClients ===');
+      console.log('Data recibida del service:', data);
+      console.log('¿Tiene data.clients?', !!data.clients);
+      console.log('¿Es data un array?', Array.isArray(data));
+      
+      // 🔧 FIX: Extraer clientes de forma inteligente
+      const clientsArray = data.clients || data || [];
+      console.log('Clients array procesado:', clientsArray);
+      console.log('Primer cliente (si existe):', clientsArray[0]);
+      if (clientsArray[0]) {
+        console.log('Propiedades del primer cliente:', Object.keys(clientsArray[0]));
+        console.log('ID del primer cliente:', clientsArray[0].id || clientsArray[0]._id);
+      }
+      
+      setClients(clientsArray);
       setPagination(prev => ({
         ...prev,
         ...data.pagination,

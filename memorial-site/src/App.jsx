@@ -15,6 +15,7 @@ import LoginPage from './pages/admin/Login';
 import DashboardPage from './pages/admin/Dashboard';
 import ClientsPage from './pages/admin/Clients';
 import NewClientPage from './pages/admin/NewClient';
+import ClientDetailsPage from './pages/admin/ClientDetails'; // 🔧 NUEVO: Página de detalles del cliente
 import MemorialsPage from './pages/admin/Memorials';
 import NewMemorialPage from './pages/admin/NewMemorial';
 import PrintQRPage from './pages/admin/PrintQR';
@@ -108,7 +109,7 @@ function App() {
               {/* Gestión de clientes */}
               <Route path="clients" element={<ClientsPage />} />
               <Route path="clients/new" element={<NewClientPage />} />
-              <Route path="clients/:id" element={<div>Detalles del cliente (por implementar)</div>} />
+              <Route path="clients/:id" element={<ClientDetailsPage />} /> {/* 🔧 ACTUALIZADO: Usar ClientDetailsPage */}
               <Route path="clients/:id/edit" element={<NewClientPage />} />
               
               {/* Gestión de memoriales */}

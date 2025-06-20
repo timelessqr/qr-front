@@ -5,7 +5,16 @@ const ProfileHeader = ({ memorialData }) => {
     <div className="relative">
       <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl">
-          <img src="/img/abuelita.jpg" alt="Foto de perfil" className=" object-cover object-center" />
+          {/* 🔧 FIX: Usar foto real del memorial */}
+          <img 
+            src={memorialData?.fotoPerfil || '/img/default-profile.jpg'} 
+            alt={`Foto de ${memorialData?.nombre || 'perfil'}`} 
+            className="w-full h-full object-cover object-center"
+            onError={(e) => {
+              // Fallback a imagen por defecto si la imagen del memorial falla
+              e.target.src = '/img/abuelita.jpg';
+            }}
+          />
         </div>
       </div>
       <div className="pt-24 pb-6 px-6 text-center">

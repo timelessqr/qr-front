@@ -102,10 +102,51 @@ const MemorialForm = () => {
   const loadMemorial = async () => {
     try {
       setLoading(true);
+      console.log('Cargando memorial con ID:', memorialId);
       const memorial = await memorialService.getMemorialById(memorialId);
-      setFormData(memorial);
-      setClient(memorial.client);
+      console.log('Memorial cargado:', memorial);
+      
+      // 🔧 FIX: Extraer clientId del memorial para modo edición
+      const memorialClientId = memorial.cliente?._id || memorial.cliente?.id || memorial.cliente || memorial.clientId;
+      console.log('ClientId extraído del memorial:', memorialClientId);
+      
+      // Actualizar formData con datos del memorial
+      setFormData({
+        nombre: memorial.nombre || '',
+        fechaNacimiento: memorial.fechaNacimiento || '',
+        fechaFallecimiento: memorial.fechaFallecimiento || '',
+        profesion: memorial.profesion || '',
+        frase: memorial.frase || '',
+        biografia: memorial.biografia || '',
+        ubicacion: {
+          ciudad: memorial.ubicacion?.ciudad || '',
+          pais: memorial.ubicacion?.pais || '',
+          cementerio: memorial.ubicacion?.cementerio || ''
+        },
+        familia: {
+          conyuge: memorial.familia?.conyuge || '',
+          hijos: memorial.familia?.hijos || [],
+          padres: memorial.familia?.padres || []
+        },
+        clientId: memorialClientId // 🔧 Agregar clientId extraído
+      });
+      
+      // Setear cliente si está populated
+      if (memorial.cliente && typeof memorial.cliente === 'object') {
+        setClient(memorial.cliente);
+      } else if (memorialClientId) {
+        // Si no está populated, cargar cliente por separado
+        console.log('Cliente no populated, cargando por separado...');
+        try {
+          const clientData = await clientService.getClientById(memorialClientId);
+          setClient(clientData);
+        } catch (clientError) {
+          console.warn('Error cargando cliente:', clientError);
+        }
+      }
+      
     } catch (err) {
+      console.error('Error cargando memorial:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -164,30 +205,55 @@ const MemorialForm = () => {
     e.preventDefault();
     
     console.log('=== ENVIANDO MEMORIAL ===');
-    console.log('clientId al enviar:', clientId);
-    console.log('formData al enviar:', formData);
+    console.log('clientId de params:', clientId);
+    console.log('clientId de formData:', formData.clientId);
+    console.log('formData completo:', formData);
+    
+    // 🚨 DEBUG: Verificar fechas antes de enviar
+    console.log('=== DEBUG FECHAS ===');
+    console.log('fechaNacimiento original:', formData.fechaNacimiento);
+    console.log('fechaFallecimiento original:', formData.fechaFallecimiento);
     
     try {
       setSubmitLoading(true);
       setError('');
       
-      if (!clientId || clientId === 'undefined') {
-        throw new Error('No se puede crear memorial: ID de cliente no válido');
+      // 🔧 FIX: Usar clientId de formData si está disponible (modo edición)
+      const finalClientId = formData.clientId || clientId;
+      console.log('ClientId final a usar:', finalClientId);
+      
+      if (!finalClientId || finalClientId === 'undefined') {
+        throw new Error('No se puede procesar memorial: ID de cliente no válido');
       }
       
+      // 🔧 FIX: Formatear fechas correctamente para el backend
       const memorialData = {
         ...formData,
-        clientId: clientId
+        clientId: finalClientId,
+        // Asegurar que las fechas estén en formato ISO correcto
+        fechaNacimiento: formData.fechaNacimiento ? 
+          new Date(formData.fechaNacimiento + 'T12:00:00.000Z').toISOString() : 
+          null,
+        fechaFallecimiento: formData.fechaFallecimiento ? 
+          new Date(formData.fechaFallecimiento + 'T12:00:00.000Z').toISOString() : 
+          null
       };
       
+      console.log('=== FECHAS FORMATEADAS ===');
+      console.log('fechaNacimiento final:', memorialData.fechaNacimiento);
+      console.log('fechaFallecimiento final:', memorialData.fechaFallecimiento);
       console.log('Datos finales a enviar:', memorialData);
       
       let memorial;
       if (isEdit) {
+        console.log('Actualizando memorial:', memorialId);
         memorial = await memorialService.updateMemorial(memorialId, memorialData);
       } else {
+        console.log('Creando nuevo memorial');
         memorial = await memorialService.createMemorial(memorialData);
       }
+      
+      console.log('Memorial procesado exitosamente:', memorial);
       
       // Generar QR automáticamente si es nuevo memorial
       if (!isEdit) {
@@ -207,6 +273,7 @@ const MemorialForm = () => {
       }
       
     } catch (err) {
+      console.error('Error en handleSubmit:', err);
       setError(err.message);
     } finally {
       setSubmitLoading(false);
