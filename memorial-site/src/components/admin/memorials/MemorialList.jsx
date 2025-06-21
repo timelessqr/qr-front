@@ -232,6 +232,16 @@ const MemorialList = () => {
                                 Ver Muro
                               </button>
                               <button
+                                onClick={() => navigate(`/admin/memorials/${memorial._id}/comentarios`)}
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-sm transition-colors duration-200"
+                                title="Configurar comentarios"
+                              >
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.477 8-10 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.477-8 10-8s10 3.582 10 8z" />
+                                </svg>
+                                Comentarios
+                              </button>
+                              <button
                                 onClick={() => handlePrintQR(memorial._id)}
                                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition-colors duration-200"
                                 title="Ver código QR"
