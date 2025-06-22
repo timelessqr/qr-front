@@ -40,19 +40,6 @@ const StatsCards = ({ stats, onQuickAction }) => {
       bgColor: 'bg-green-50',
       change: stats?.qrChange || '+0%',
       changeType: stats?.qrChangeType || 'neutral'
-    },
-    {
-      title: 'Visualizaciones',
-      value: stats?.totalViews || 0,
-      icon: (
-        <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-        </svg>
-      ),
-      bgColor: 'bg-purple-50',
-      change: stats?.viewsChange || '+0%',
-      changeType: stats?.viewsChangeType || 'neutral'
     }
   ];
 
@@ -78,7 +65,7 @@ const StatsCards = ({ stats, onQuickAction }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {cards.map((card, index) => (
         <div key={index} className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">

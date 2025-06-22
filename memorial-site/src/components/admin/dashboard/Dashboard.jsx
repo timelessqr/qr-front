@@ -3,7 +3,7 @@
 // ====================================
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminService, clientService, qrService } from '../../../services';
+import { adminService } from '../../../services';
 import StatsCards from './StatsCards';
 import RecentActivity from './RecentActivity';
 
@@ -15,12 +15,10 @@ const Dashboard = () => {
     stats: {
       totalClients: 0,
       totalMemorials: 0,
-      totalQRs: 0,
-      totalViews: 0
+      totalQRs: 0
     },
     recentClients: [],
-    recentMemorials: [],
-    systemHealth: {}
+    recentMemorials: []
   });
 
   useEffect(() => {
@@ -34,7 +32,32 @@ const Dashboard = () => {
 
       // Cargar dashboard data del backend
       const data = await adminService.getDashboard();
-      setDashboardData(data);
+      
+      // 🚨 DEBUG: Ver estructura de datos del backend
+      console.log('=== DEBUG Dashboard Data ===');
+      console.log('Data completa del backend:', data);
+      console.log('Estadísticas:', data.estadisticas);
+      console.log('Actividades:', data.actividades);
+      console.log('==========================');
+      
+      // Mapear los datos del backend a la estructura del frontend
+      const mappedData = {
+        stats: {
+          totalClients: data.estadisticas?.clientes?.total || 0,
+          totalMemorials: data.estadisticas?.memoriales?.total || 0,
+          totalQRs: data.estadisticas?.memoriales?.total || 0, // Los QR se generan 1:1 con memoriales
+          clientsChange: `+${data.estadisticas?.clientes?.nuevosEsteMes || 0}`,
+          memorialesChange: `+${data.estadisticas?.memoriales?.nuevosEsteMes || 0}`,
+          qrChange: `+${data.estadisticas?.memoriales?.nuevosEsteMes || 0}`, // Mismo que memoriales
+          clientsChangeType: (data.estadisticas?.clientes?.nuevosEsteMes || 0) > 0 ? 'positive' : 'neutral',
+          memorialsChangeType: (data.estadisticas?.memoriales?.nuevosEsteMes || 0) > 0 ? 'positive' : 'neutral',
+          qrChangeType: (data.estadisticas?.memoriales?.nuevosEsteMes || 0) > 0 ? 'positive' : 'neutral'
+        },
+        recentClients: data.actividades?.clientesRecientes || [],
+        recentMemorials: data.actividades?.memorialesRecientes || []
+      };
+      
+      setDashboardData(mappedData);
 
     } catch (err) {
       setError(err.message);
@@ -45,6 +68,13 @@ const Dashboard = () => {
   };
 
   const handleQuickAction = (action, id = null) => {
+    // 🚨 DEBUG: Ver qué acción se está ejecutando
+    console.log('=== DEBUG handleQuickAction ===');
+    console.log('Action:', action);
+    console.log('ID recibido:', id);
+    console.log('Tipo de ID:', typeof id);
+    console.log('===============================');
+    
     switch (action) {
       case 'new-client':
         navigate('/admin/clients/new');
@@ -60,10 +90,16 @@ const Dashboard = () => {
         navigate(`/admin/clients/${id}`);
         break;
       case 'view-memorial':
-        navigate(`/admin/memorials/${id}`);
+        navigate('/admin/memorials');
         break;
       case 'print-qr':
         navigate(`/admin/memorials/${id}/print-qr`);
+        break;
+      case 'view-all-clients':
+        navigate('/admin/clients');
+        break;
+      case 'view-all-memorials':
+        navigate('/admin/memorials');
         break;
       default:
         break;
@@ -76,8 +112,8 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {[...Array(4)].map((_, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {[...Array(3)].map((_, i) => (
                 <div key={i} className="bg-white p-6 rounded-lg shadow">
                   <div className="h-4 bg-gray-300 rounded mb-2"></div>
                   <div className="h-8 bg-gray-300 rounded"></div>

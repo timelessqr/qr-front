@@ -9,6 +9,12 @@ const ClientDetails = () => {
   const { id: clientId } = useParams(); // 🔧 FIX: La ruta usa :id, no :clientId
   const navigate = useNavigate();
   
+  // 🚨 DEBUG: Ver qué ID está llegando
+  console.log('=== DEBUG ClientDetails ===');
+  console.log('Client ID desde useParams:', clientId);
+  console.log('Tipo de clientId:', typeof clientId);
+  console.log('================================');
+  
   const [client, setClient] = useState(null);
   const [memorials, setMemorials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +28,15 @@ const ClientDetails = () => {
     try {
       setLoading(true);
       setError('');
+      
+      // 🚨 Validación: No hacer petición si clientId es inválido
+      if (!clientId || clientId === 'null' || clientId === 'undefined') {
+        setError('ID de cliente inválido');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Cargando datos para cliente:', clientId);
       
       // Cargar datos del cliente
       const clientData = await clientService.getClientById(clientId);

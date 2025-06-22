@@ -3,21 +3,42 @@
 // ====================================
 import React from 'react';
 
-const RecentActivity = ({ title, items, type, onAction }) => {
+const RecentActivity = ({ title, items = [], type, onAction }) => {
+  // 🚨 DEBUG: Ver datos que llegan
+  console.log(`=== DEBUG RecentActivity (${type}) ===`);
+  console.log('Title:', title);
+  console.log('Items:', items);
+  console.log('Items length:', items?.length);
+  console.log('=====================================');
   const formatDate = (dateString) => {
-    if (!dateString) return 'Fecha no disponible';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'Sin fecha';
+    try {
+      const date = new Date(dateString);
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.warn('Error formateando fecha:', dateString, error);
+      return 'Fecha no válida';
+    }
   };
 
   const renderItem = (item, index) => {
+    // Verificación de seguridad
+    if (!item) {
+      console.warn(`Item inválido en índice ${index}:`, item);
+      return null;
+    }
     if (type === 'clients') {
       return (
-        <li key={item._id || index} className="py-4">
+        <li key={item.id || item._id || index} className="py-4">
           <div className="flex items-center space-x-4">
             <div className="flex-shrink-0">
               <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -34,12 +55,22 @@ const RecentActivity = ({ title, items, type, onAction }) => {
                 {item.telefono || 'Sin teléfono'} • {item.email || 'Sin email'}
               </p>
               <p className="text-xs text-gray-400">
-                Registrado: {formatDate(item.createdAt)}
+                Registrado: {formatDate(item.fechaRegistro || item.createdAt)}
               </p>
             </div>
             <div className="flex-shrink-0">
               <button
-                onClick={() => onAction('view-client', item._id)}
+                onClick={() => {
+                  // 🚨 DEBUG: Ver datos del item antes de navegar
+                  console.log('=== DEBUG RecentActivity onClick ===');
+                  console.log('Item completo:', item);
+                  console.log('Item._id:', item._id);
+                  console.log('Item.id:', item.id);
+                  console.log('Acción:', 'view-client');
+                  console.log('=======================================');
+                  // 🔧 FIX: Usar item.id en lugar de item._id
+                  onAction('view-client', item.id || item._id);
+                }}
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
               >
                 Ver
@@ -52,7 +83,7 @@ const RecentActivity = ({ title, items, type, onAction }) => {
 
     if (type === 'memorials') {
       return (
-        <li key={item._id || index} className="py-4">
+        <li key={item.id || item._id || index} className="py-4">
           <div className="flex items-center space-x-4">
             <div className="flex-shrink-0">
               <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
@@ -66,22 +97,29 @@ const RecentActivity = ({ title, items, type, onAction }) => {
                 {item.nombre || 'Memorial sin nombre'}
               </p>
               <p className="text-sm text-gray-500 truncate">
-                Cliente: {item.client?.nombre || 'Cliente no especificado'}
+                Cliente: {item.cliente?.nombre || item.client?.nombre || 'Cliente no especificado'}
               </p>
               <p className="text-xs text-gray-400">
-                Creado: {formatDate(item.createdAt)}
+                Creado: {formatDate(item.fechaCreacion || item.createdAt)}
               </p>
             </div>
             <div className="flex-shrink-0 flex space-x-2">
               <button
-                onClick={() => onAction('view-memorial', item._id)}
+                onClick={() => {
+                  console.log('=== DEBUG Memorial onClick ===');
+                  console.log('Memorial item:', item);
+                  console.log('Memorial item.id:', item.id);
+                  console.log('Memorial item._id:', item._id);
+                  console.log('===============================');
+                  onAction('view-memorial', item.id || item._id);
+                }}
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200"
               >
                 Ver
               </button>
               {item.qr && (
                 <button
-                  onClick={() => onAction('print-qr', item._id)}
+                  onClick={() => onAction('print-qr', item.id || item._id)}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200"
                 >
                   QR
