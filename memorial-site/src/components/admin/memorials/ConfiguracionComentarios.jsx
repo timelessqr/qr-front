@@ -239,7 +239,7 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
   // 🎨 COMPONENTES DE UI
   // ===============================
 
-  // 🆕 Componente para mostrar tarjeta de comentario con respuestas
+  // 🔧 ARREGLADO: Componente para mostrar tarjeta de comentario con respuestas anidadas
   const TarjetaComentario = ({ comentario }) => {
     const fechaFormateada = new Date(comentario.fechaCreacion).toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -272,45 +272,10 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         : 'bg-green-100 text-green-800';
     };
 
-    // Si es una respuesta, renderizar de forma diferente
-    if (comentario.esRespuesta) {
-      return (
-        <div className="ml-8 bg-gray-50 p-3 rounded-lg border-l-4 border-blue-400">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3 flex-1">
-              <div className={`w-8 h-8 rounded-full ${getAvatarColor(comentario.nivelUsuario)} flex items-center justify-center text-white font-semibold text-sm`}>
-                {comentario.nombre ? comentario.nombre.charAt(0).toUpperCase() : 'A'}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h5 className="font-medium text-gray-800 text-sm">{comentario.nombre}</h5>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getBadgeColor(comentario.nivelUsuario)}`}>
-                    {comentario.nivelUsuario === 'cliente' ? '👑 Cliente' : '👥 Familiar'}
-                  </span>
-                  <span className="text-gray-500 text-xs">• {fechaFormateada}</span>
-                </div>
-                <p className="text-gray-700 text-sm mb-1">{comentario.mensaje}</p>
-                <p className="text-xs text-gray-500">↳ Respondiendo a comentario principal</p>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => eliminarComentario(comentario.id)}
-              className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 ml-2"
-              title="Eliminar respuesta"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    // Comentario principal
+    // Comentario principal con respuestas anidadas
     return (
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-red-200 transition-colors duration-200">
+        {/* Comentario principal */}
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full ${getAvatarColor(comentario.nivelUsuario)} flex items-center justify-center text-white font-semibold text-sm`}>
@@ -352,14 +317,97 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         
         <p className="text-gray-700 leading-relaxed mb-2">{comentario.mensaje}</p>
         
-        {comentario.ip && (
-          <p className="text-xs text-gray-400">📍 IP: {comentario.ip}</p>
+        {/* Mostrar likes y información adicional */}
+        <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+          {comentario.likes > 0 && (
+            <span className="flex items-center">
+              <svg className="w-3 h-3 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+              </svg>
+              {comentario.likes} likes
+            </span>
+          )}
+          {comentario.ip && (
+            <span>📍 IP: {comentario.ip}</span>
+          )}
+        </div>
+
+        {/* 🔧 ARREGLADO: Mostrar respuestas anidadas si existen */}
+        {comentario.respuestas && comentario.respuestas.length > 0 && (
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center mb-3">
+              <svg className="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-medium text-blue-700">
+                {comentario.respuestas.length} {comentario.respuestas.length === 1 ? 'respuesta' : 'respuestas'}
+              </span>
+            </div>
+            
+            <div className="space-y-3">
+              {comentario.respuestas.map((respuesta) => {
+                const fechaRespuesta = new Date(respuesta.fechaCreacion).toLocaleDateString('es-ES', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+
+                return (
+                  <div key={respuesta.id} className="ml-4 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className={`w-8 h-8 rounded-full ${getAvatarColor(respuesta.nivelUsuario)} flex items-center justify-center text-white font-semibold text-sm`}>
+                          {respuesta.nombre ? respuesta.nombre.charAt(0).toUpperCase() : 'A'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h5 className="font-medium text-gray-800 text-sm">{respuesta.nombre}</h5>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getBadgeColor(respuesta.nivelUsuario)}`}>
+                              {respuesta.nivelUsuario === 'cliente' ? '👑 Cliente' : '👥 Familiar'}
+                            </span>
+                            <span className="text-gray-500 text-xs">• {fechaRespuesta}</span>
+                          </div>
+                          <p className="text-gray-700 text-sm mb-1">{respuesta.mensaje}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            {respuesta.likes > 0 && (
+                              <span className="flex items-center">
+                                <svg className="w-3 h-3 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                                </svg>
+                                {respuesta.likes} likes
+                              </span>
+                            )}
+                            {respuesta.codigoUsado && (
+                              <span className="bg-gray-100 px-2 py-0.5 rounded">
+                                {respuesta.codigoUsado}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => eliminarComentario(respuesta.id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 ml-2"
+                        title="Eliminar respuesta"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
     );
   };
 
-  // 🆕 Componente de estadísticas
+  // 🆕 Componente de estadísticas mejorado
   const EstadisticasComentarios = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">📊 Estadísticas</h3>
@@ -402,11 +450,45 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-purple-600">Total</p>
-              <p className="text-2xl font-bold text-purple-900">{estadisticas.totalGeneral || totalComentarios}</p>
+              <p className="text-2xl font-bold text-purple-900">{(estadisticas.totalComentarios || 0) + (estadisticas.totalRespuestas || 0)}</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* 🆕 Estadísticas detalladas por nivel de usuario */}
+      {estadisticas.statsByUserLevel && (
+        <div className="mt-6">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Distribución por tipo de usuario</h4>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Familiares */}
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">👥 Familiares</span>
+                <span className="text-sm text-gray-500">
+                  {(estadisticas.statsByUserLevel.familiar?.comentarios || 0) + (estadisticas.statsByUserLevel.familiar?.respuestas || 0)}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                {estadisticas.statsByUserLevel.familiar?.comentarios || 0} comentarios • {estadisticas.statsByUserLevel.familiar?.respuestas || 0} respuestas
+              </div>
+            </div>
+            
+            {/* Clientes */}
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-blue-600">👑 Clientes</span>
+                <span className="text-sm text-blue-500">
+                  {(estadisticas.statsByUserLevel.cliente?.comentarios || 0) + (estadisticas.statsByUserLevel.cliente?.respuestas || 0)}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-blue-500">
+                {estadisticas.statsByUserLevel.cliente?.comentarios || 0} comentarios • {estadisticas.statsByUserLevel.cliente?.respuestas || 0} respuestas
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

@@ -4,7 +4,7 @@ import { comentarioService } from '../services';
 const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configuracion: configInicial = {} }) => {
   
   // ===============================
-  // 🎛️ ESTADOS
+  // 🎛️ ESTADOS OPTIMIZADOS
   // ===============================
   const [comentarios, setComentarios] = useState([]);
   const [configuracion, setConfiguracion] = useState(configInicial);
@@ -13,22 +13,23 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
   
+  // 🔧 OPTIMIZADO: Referencias estables para evitar re-renders
+  const inputRef = useRef(null);
+  const timeoutRef = useRef(null);
+  
   // Estados para validación de código
   const [mostrarValidacion, setMostrarValidacion] = useState(false);
   const [codigoFamiliar, setCodigoFamiliar] = useState('');
   const [validandoCodigo, setValidandoCodigo] = useState(false);
-  const [tieneAcceso, setTieneAcceso] = useState(false);
-  const [nivelUsuario, setNivelUsuario] = useState(''); // 🆕 'familiar' o 'cliente'
-  const [puedeResponder, setPuedeResponder] = useState(false); // 🆕
   
-  // 🔧 REF para el input del código - ARREGLA EL PROBLEMA DEL CURSOR
-  const codigoInputRef = useRef(null);
+  // 🔧 OPTIMIZADO: Estado de acceso más estable
+  const [acceso, setAcceso] = useState(() => ({
+    tieneAcceso: false,
+    nivel: '',
+    puedeResponder: false
+  }));
   
-  // 🔧 REF para inputs del formulario de respuesta - ARREGLA EL PROBLEMA DEL CURSOR
-  const nombreRespuestaRef = useRef(null);
-  const mensajeRespuestaRef = useRef(null);
-  
-  // Estado para el nuevo comentario (manteniendo el diseño original)
+  // Estado para el nuevo comentario
   const [nuevoComentario, setNuevoComentario] = useState({
     nombre: "",
     mensaje: "",
@@ -37,7 +38,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   const [enviandoComentario, setEnviandoComentario] = useState(false);
   
   // 🆕 Estados para respuestas
-  const [respuestaActiva, setRespuestaActiva] = useState(null); // ID del comentario al que se está respondiendo
+  const [respuestaActiva, setRespuestaActiva] = useState(null);
   const [nuevaRespuesta, setNuevaRespuesta] = useState({
     nombre: "",
     mensaje: "",
@@ -51,44 +52,68 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   const [totalComentarios, setTotalComentarios] = useState(0);
 
   // ===============================
-  // 🔄 EFECTOS
+  // 🔄 EFECTOS OPTIMIZADOS
   // ===============================
   
   useEffect(() => {
     if (qrCode) {
       inicializarComentarios();
+      verificarAccesoExistente();
     }
   }, [qrCode]);
 
-  useEffect(() => {
-    // Verificar si ya tiene acceso y qué nivel
-    if (qrCode && comentarioService.tieneAcceso(qrCode)) {
-      setTieneAcceso(true);
-      setNivelUsuario(comentarioService.obtenerNivel(qrCode) || 'familiar');
-      setPuedeResponder(comentarioService.puedeResponder(qrCode));
-      console.log('🔍 DEBUG: Usuario tiene acceso:', {
-        nivel: comentarioService.obtenerNivel(qrCode),
-        puedeResponder: comentarioService.puedeResponder(qrCode)
+  // 🔧 OPTIMIZADO: Verificar acceso existente sin causar re-renders
+  const verificarAccesoExistente = useCallback(() => {
+    if (!qrCode) return;
+    
+    if (comentarioService.tieneAcceso(qrCode)) {
+      const nivel = comentarioService.obtenerNivel(qrCode) || 'familiar';
+      const puedeResponder = comentarioService.puedeResponder(qrCode);
+      
+      setAcceso(prevAcceso => {
+        // Solo actualizar si realmente cambió
+        if (prevAcceso.tieneAcceso === true && 
+            prevAcceso.nivel === nivel && 
+            prevAcceso.puedeResponder === puedeResponder) {
+          return prevAcceso;
+        }
+        
+        return {
+          tieneAcceso: true,
+          nivel,
+          puedeResponder
+        };
       });
+      
+      console.log('🔍 DEBUG: Usuario tiene acceso:', { nivel, puedeResponder });
     }
   }, [qrCode]);
+
+  // 🔧 OPTIMIZADO: Limpiar timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   // ===============================
-  // 🔧 FUNCIONES PRINCIPALES
+  // 🔧 FUNCIONES PRINCIPALES OPTIMIZADAS
   // ===============================
 
   const inicializarComentarios = async () => {
+    if (loading) return; // Prevenir múltiples cargas
+    
     setLoading(true);
     setError('');
     
     try {
-      // Obtener configuración de comentarios
       const configResult = await comentarioService.obtenerConfiguracion(qrCode);
       
       if (configResult.success) {
         setConfiguracion(configResult.config);
         
-        // Si están habilitados, cargar comentarios
         if (configResult.config.habilitados) {
           await cargarComentarios();
         }
@@ -105,6 +130,8 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   };
 
   const cargarComentarios = async (page = 1) => {
+    if (loadingComentarios) return; // Prevenir múltiples cargas
+    
     setLoadingComentarios(true);
     setError('');
     
@@ -115,7 +142,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         if (page === 1) {
           setComentarios(result.comentarios);
         } else {
-          // Para páginas adicionales, agregar a la lista existente
           setComentarios(prev => [...prev, ...result.comentarios]);
         }
         
@@ -136,18 +162,16 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   };
 
-  // 🔧 FUNCIÓN MEJORADA para validar código - ARREGLA PROBLEMA DEL CURSOR
-  const validarCodigoFamiliar = useCallback(async (e) => {
+  // 🔧 OPTIMIZADO: Validar código con manejo mejorado del input
+  const validarCodigoFamiliar = async (e) => {
     e.preventDefault();
     
     if (!codigoFamiliar.trim()) {
       setError('Por favor ingrese el código familiar');
-      // Devolver el foco al input
-      if (codigoInputRef.current) {
-        codigoInputRef.current.focus();
-      }
       return;
     }
+    
+    if (validandoCodigo) return; // Prevenir múltiples envíos
     
     setValidandoCodigo(true);
     setError('');
@@ -156,92 +180,54 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       const result = await comentarioService.validarCodigo(qrCode, codigoFamiliar);
       
       if (result.success) {
-        // 🆕 Guardar datos completos de validación
         comentarioService.guardarDatosValidacion(qrCode, {
           token: result.token,
           nivel: result.nivel,
           permisos: result.permisos
         });
         
-        setTieneAcceso(true);
-        setNivelUsuario(result.nivel);
-        setPuedeResponder(result.permisos.includes('responder'));
+        // 🔧 Actualizar estado de acceso
+        setAcceso({
+          tieneAcceso: true,
+          nivel: result.nivel,
+          puedeResponder: result.permisos.includes('responder')
+        });
+        
         setMostrarValidacion(false);
         setCodigoFamiliar('');
         
-        // Mensaje personalizado según el nivel
         const mensajeNivel = result.nivel === 'cliente' 
           ? '👑 Código de cliente validado. Puedes comentar y responder.' 
           : '✅ Código familiar validado. Puedes comentar.';
         
         setMensaje(mensajeNivel);
         
-        console.log('🔍 DEBUG: Validación exitosa:', {
-          nivel: result.nivel,
-          permisos: result.permisos,
-          puedeResponder: result.permisos.includes('responder')
-        });
-        
-        // Limpiar mensaje después de 3 segundos
-        setTimeout(() => setMensaje(''), 3000);
+        // 🔧 OPTIMIZADO: Usar ref para limpiar timeout
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setMensaje(''), 3000);
         
       } else {
         setError(result.message || 'Código incorrecto');
-        // Mantener el foco en el input para reintento
-        setTimeout(() => {
-          if (codigoInputRef.current) {
-            codigoInputRef.current.focus();
-            codigoInputRef.current.select();
-          }
-        }, 100);
       }
       
     } catch (err) {
       console.error('❌ Error validando código:', err);
       setError('Error al validar el código');
-      // Mantener el foco en el input
-      setTimeout(() => {
-        if (codigoInputRef.current) {
-          codigoInputRef.current.focus();
-        }
-      }, 100);
     } finally {
       setValidandoCodigo(false);
     }
-  }, [qrCode, codigoFamiliar]);
-
-  // 🔧 FUNCIÓN MEJORADA para manejar cambios en el input del código
-  const handleCodigoChange = (e) => {
-    const valor = e.target.value;
-    setCodigoFamiliar(valor);
-    // Limpiar error cuando el usuario empieza a escribir
-    if (error && valor.trim().length > 0) {
-      setError('');
-    }
   };
 
-  // Manejar cambios en el formulario de comentario principal
-  const handleChangeComentario = (e) => {
-    const { name, value } = e.target;
-    setNuevoComentario(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // 🔧 FUNCIÓN MEJORADA para manejar cambios en el formulario de respuesta
-  const handleChangeRespuesta = (e) => {
-    const { name, value } = e.target;
-    setNuevaRespuesta(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // 🔧 OPTIMIZADO: Handler del input con debounce
+  const handleCodigoChange = useCallback((e) => {
+    const value = e.target.value;
+    setCodigoFamiliar(value);
     
-    // Limpiar error cuando el usuario empieza a escribir
-    if (error && value.trim().length > 0) {
+    // Limpiar error cuando el usuario empiece a escribir
+    if (error && value.length > 0) {
       setError('');
     }
-  };
+  }, [error]);
 
   // Agregar nuevo comentario principal
   const agregarComentario = async (e) => {
@@ -252,10 +238,12 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       return;
     }
     
-    if (configuracion.requiereCodigo && !tieneAcceso) {
+    if (configuracion.requiereCodigo && !acceso.tieneAcceso) {
       setError('Debe validar el código familiar primero');
       return;
     }
+    
+    if (enviandoComentario) return; // Prevenir múltiples envíos
     
     setEnviandoComentario(true);
     setError('');
@@ -264,7 +252,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       const token = comentarioService.obtenerToken(qrCode);
       if (!token) {
         setError('Token expirado. Por favor valide el código nuevamente');
-        setTieneAcceso(false);
+        setAcceso({ tieneAcceso: false, nivel: '', puedeResponder: false });
         return;
       }
       
@@ -277,17 +265,12 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       const result = await comentarioService.crearComentario(qrCode, comentarioData, token);
       
       if (result.success) {
-        // Limpiar formulario
         setNuevoComentario({ nombre: "", mensaje: "", relacion: "familiar" });
-        
-        // Recargar comentarios para mostrar el nuevo
         await cargarComentarios(1);
-        
         setMensaje('✅ Comentario publicado correctamente');
         
-        // Limpiar mensaje después de 3 segundos
-        setTimeout(() => setMensaje(''), 3000);
-        
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setMensaje(''), 3000);
       } else {
         setError(result.message || 'Error al publicar comentario');
       }
@@ -304,14 +287,10 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   const crearRespuesta = async (comentarioId) => {
     if (!nuevaRespuesta.mensaje.trim()) {
       setError('Por favor escriba una respuesta');
-      // Dar foco al campo de mensaje
-      setTimeout(() => {
-        if (mensajeRespuestaRef.current) {
-          mensajeRespuestaRef.current.focus();
-        }
-      }, 100);
       return;
     }
+    
+    if (enviandoRespuesta) return; // Prevenir múltiples envíos
     
     setEnviandoRespuesta(true);
     setError('');
@@ -320,7 +299,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       const token = comentarioService.obtenerToken(qrCode);
       if (!token) {
         setError('Token expirado. Por favor valide el código nuevamente');
-        setTieneAcceso(false);
+        setAcceso({ tieneAcceso: false, nivel: '', puedeResponder: false });
         return;
       }
       
@@ -330,23 +309,16 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         relacion: nuevaRespuesta.relacion || 'familiar'
       };
       
-      console.log('🚀 DEBUG: Enviando respuesta:', { comentarioId, respuestaData });
-      
       const result = await comentarioService.crearRespuesta(qrCode, comentarioId, respuestaData, token);
       
       if (result.success) {
-        // Limpiar formulario de respuesta
         setNuevaRespuesta({ nombre: "", mensaje: "", relacion: "familiar" });
         setRespuestaActiva(null);
-        
-        // Recargar comentarios para mostrar la nueva respuesta
         await cargarComentarios(1);
-        
         setMensaje('✅ Respuesta publicada correctamente');
         
-        // Limpiar mensaje después de 3 segundos
-        setTimeout(() => setMensaje(''), 3000);
-        
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setMensaje(''), 3000);
       } else {
         setError(result.message || 'Error al publicar respuesta');
       }
@@ -361,11 +333,10 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
 
   // 🆕 Mostrar/ocultar formulario de respuesta
   const toggleRespuesta = (comentarioId) => {
-    console.log('🔍 DEBUG: Toggle respuesta para comentario:', comentarioId, 'Puede responder:', puedeResponder);
-    
-    if (!puedeResponder) {
+    if (!acceso.puedeResponder) {
       setError('Solo el cliente puede responder a comentarios');
-      setTimeout(() => setError(''), 3000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setError(''), 3000);
       return;
     }
     
@@ -375,28 +346,19 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     } else {
       setRespuestaActiva(comentarioId);
       setNuevaRespuesta({ nombre: "", mensaje: "", relacion: "familiar" });
-      
-      // 🔧 Dar foco al primer input del formulario después de un momento
-      setTimeout(() => {
-        if (nombreRespuestaRef.current) {
-          nombreRespuestaRef.current.focus();
-        }
-      }, 100);
     }
   };
 
-  // 🆕 Dar like a un comentario (ahora se guarda en BD)
+  // 🆕 Dar like a un comentario
   const darLike = async (id) => {
     try {
       const result = await comentarioService.darLike(qrCode, id);
       
       if (result.success) {
-        // Actualizar estado local con el nuevo número de likes
         setComentarios(comentarios.map(comentario => {
           if (comentario._id === id || comentario.id === id) {
             return {...comentario, likes: result.likes};
           }
-          // También actualizar respuestas
           if (comentario.respuestas) {
             comentario.respuestas = comentario.respuestas.map(respuesta => 
               respuesta._id === id || respuesta.id === id ? 
@@ -408,12 +370,14 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         }));
       } else {
         setError(result.message || 'Error al dar like');
-        setTimeout(() => setError(''), 3000);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setError(''), 3000);
       }
     } catch (err) {
       console.error('❌ Error dando like:', err);
       setError('Error al dar like');
-      setTimeout(() => setError(''), 3000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setError(''), 3000);
     }
   };
 
@@ -424,10 +388,11 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   };
 
   // ===============================
-  // 🎨 COMPONENTE DE VALIDACIÓN MEJORADO
+  // 🎨 COMPONENTES DE UI OPTIMIZADOS
   // ===============================
 
-  const FormularioValidacion = () => (
+  // 🔧 OPTIMIZADO: Formulario de validación sin re-renders
+  const FormularioValidacion = React.memo(() => (
     <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 mb-4">
       <h3 className="text-gray-800 font-medium mb-3">🔐 Código de Acceso</h3>
       <p className="text-gray-600 text-sm mb-4">
@@ -437,15 +402,16 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       <form onSubmit={validarCodigoFamiliar}>
         <div className="flex gap-3">
           <input
-            ref={codigoInputRef} // 🔧 REF para controlar el foco
+            ref={inputRef}
             type="text"
             value={codigoFamiliar}
-            onChange={handleCodigoChange} // 🔧 Función mejorada
+            onChange={handleCodigoChange}
             className="flex-1 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             placeholder="Ingrese el código de acceso"
             disabled={validandoCodigo}
-            autoComplete="off" // 🔧 Evita conflictos con autocompletado
-            spellCheck="false" // 🔧 Evita corrector ortográfico
+            autoComplete="off"
+            spellCheck="false"
+            style={{ fontSize: '16px' }} // Prevenir zoom en iOS
           />
           <button
             type="submit"
@@ -457,38 +423,34 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         </div>
       </form>
     </div>
-  );
+  ));
 
-  // 🔧 COMPONENTE DE FORMULARIO DE RESPUESTA MEJORADO
-  const FormularioRespuesta = ({ comentarioId }) => (
+  // 🔧 OPTIMIZADO: Componente de formulario de respuesta
+  const FormularioRespuesta = React.memo(({ comentarioId }) => (
     <div className="mt-4 ml-16 bg-blue-50 rounded-lg p-4 border border-blue-100">
       <h4 className="text-gray-800 font-medium mb-3">💬 Responder</h4>
       <div>
         <input
-          ref={nombreRespuestaRef} // 🔧 REF para controlar el foco
           type="text"
-          name="nombre"
           value={nuevaRespuesta.nombre}
-          onChange={handleChangeRespuesta} // 🔧 Función mejorada
+          onChange={(e) => setNuevaRespuesta(prev => ({...prev, nombre: e.target.value}))}
           className="w-full mb-3 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Tu nombre (opcional)"
           disabled={enviandoRespuesta}
-          autoComplete="off" // 🔧 Evita conflictos con autocompletado
-          spellCheck="false" // 🔧 Evita corrector ortográfico
+          autoComplete="off"
+          spellCheck="false"
+          style={{ fontSize: '16px' }} // Prevenir zoom en iOS
         />
         <textarea
-          ref={mensajeRespuestaRef} // 🔧 REF para controlar el foco
-          name="mensaje"
           value={nuevaRespuesta.mensaje}
-          onChange={handleChangeRespuesta} // 🔧 Función mejorada
+          onChange={(e) => setNuevaRespuesta(prev => ({...prev, mensaje: e.target.value}))}
           className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
           rows="3"
           placeholder="Escribe tu respuesta..."
-          required
           disabled={enviandoRespuesta}
-          autoComplete="off" // 🔧 Evita conflictos con autocompletado
-          spellCheck="true" // 🔧 Mantener corrector para mensajes
-        ></textarea>
+          autoComplete="off"
+          style={{ fontSize: '16px' }} // Prevenir zoom en iOS
+        />
         <div className="mt-3 flex justify-end gap-2">
           <button 
             type="button"
@@ -508,7 +470,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         </div>
       </div>
     </div>
-  );
+  ));
 
   // ===============================
   // 🎯 RENDERIZADO PRINCIPAL
@@ -546,16 +508,16 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       <div className="bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center pt-4">Mensajes de condolencia</h2>
         
-        {/* Indicador del nivel de usuario - MEJORADO */}
-        {tieneAcceso && (
+        {/* Indicador del nivel de usuario */}
+        {acceso.tieneAcceso && (
           <div className="mx-6 mb-4 text-center">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-              nivelUsuario === 'cliente' 
+              acceso.nivel === 'cliente' 
                 ? 'bg-blue-100 text-blue-800' 
                 : 'bg-green-100 text-green-800'
             }`}>
-              {nivelUsuario === 'cliente' ? '👑 Cliente' : '👥 Familiar'}
-              {puedeResponder && ' • Puede responder comentarios'}
+              {acceso.nivel === 'cliente' ? '👑 Cliente' : '👥 Familiar'}
+              {acceso.puedeResponder && ' • Puede responder comentarios'}
               <span className="ml-2 text-xs opacity-70">• Token válido por 2 minutos</span>
             </span>
           </div>
@@ -577,19 +539,11 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         {/* Formulario para escribir comentario */}
         <div className="px-6 pb-6 border-b border-gray-200">
           
-          {/* Validación de código (solo si se requiere y no tiene acceso) */}
-          {configuracion.requiereCodigo && !tieneAcceso && !mostrarValidacion && (
+          {/* Validación de código */}
+          {configuracion.requiereCodigo && !acceso.tieneAcceso && !mostrarValidacion && (
             <div className="text-center mb-6">
               <button
-                onClick={() => {
-                  setMostrarValidacion(true);
-                  // Dar foco al input cuando se muestra
-                  setTimeout(() => {
-                    if (codigoInputRef.current) {
-                      codigoInputRef.current.focus();
-                    }
-                  }, 100);
-                }}
+                onClick={() => setMostrarValidacion(true)}
                 className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
               >
                 🔐 Ingresar código de acceso
@@ -600,30 +554,30 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
           {/* Formulario de validación */}
           {mostrarValidacion && <FormularioValidacion />}
           
-          {/* Formulario principal (diseño original del dev) */}
-          {(tieneAcceso || !configuracion.requiereCodigo) && (
+          {/* Formulario principal */}
+          {(acceso.tieneAcceso || !configuracion.requiereCodigo) && (
             <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
               <h3 className="text-gray-800 font-medium mb-3">Comparte tu mensaje</h3>
               <form onSubmit={agregarComentario}>
                 <input
                   type="text"
-                  name="nombre"
                   value={nuevoComentario.nombre}
-                  onChange={handleChangeComentario}
+                  onChange={(e) => setNuevoComentario(prev => ({...prev, nombre: e.target.value}))}
                   className="w-full mb-3 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Tu nombre (opcional)"
                   disabled={enviandoComentario}
+                  style={{ fontSize: '16px' }} // Prevenir zoom en iOS
                 />
                 <textarea
-                  name="mensaje"
                   value={nuevoComentario.mensaje}
-                  onChange={handleChangeComentario}
+                  onChange={(e) => setNuevoComentario(prev => ({...prev, mensaje: e.target.value}))}
                   className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
                   rows="3"
                   placeholder="Escribe un mensaje en memoria..."
                   required
                   disabled={enviandoComentario}
-                ></textarea>
+                  style={{ fontSize: '16px' }} // Prevenir zoom en iOS
+                />
                 <div className="mt-4 flex justify-end">
                   <button 
                     type="submit"
@@ -645,7 +599,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
             {/* Debug info */}
             {process.env.NODE_ENV === 'development' && (
               <div className="bg-yellow-50 p-3 rounded text-xs">
-                <strong>DEBUG:</strong> Nivel: {nivelUsuario}, Puede responder: {puedeResponder ? 'SÍ' : 'NO'}, Total comentarios: {comentarios.length}
+                <strong>DEBUG:</strong> Nivel: {acceso.nivel}, Puede responder: {acceso.puedeResponder ? 'SÍ' : 'NO'}, Total comentarios: {comentarios.length}
               </div>
             )}
             
@@ -697,8 +651,8 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                             {comentario.likes || 0} Me gusta
                           </button>
                           
-                          {/* 🆕 Botón responder MEJORADO - con más debug */}
-                          {puedeResponder && !comentario.esRespuesta && (
+                          {/* Botón responder */}
+                          {acceso.puedeResponder && !comentario.esRespuesta && (
                             <button 
                               className="flex items-center hover:text-blue-600 transition-colors duration-200"
                               onClick={() => toggleRespuesta(comentario._id || comentario.id)}
@@ -760,7 +714,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                     </div>
                   )}
                   
-                  {/* Formulario de respuesta (solo si está activo y es cliente) */}
+                  {/* Formulario de respuesta */}
                   {respuestaActiva === (comentario._id || comentario.id) && (
                     <FormularioRespuesta comentarioId={comentario._id || comentario.id} />
                   )}
