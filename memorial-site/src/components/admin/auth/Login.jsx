@@ -157,7 +157,7 @@ const Login = () => {
           {/* Información adicional */}
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              Solo personal autorizado de la empresa funeraria
+              Solo personal autorizado de Lazos de Vida
             </p>
           </div>
         </form>
