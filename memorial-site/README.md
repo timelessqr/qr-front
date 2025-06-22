@@ -263,18 +263,44 @@ memorial-site/
 └── package.json           # Dependencias
 ```
 
-## 🚀 **ESTADO ACTUAL DEL PROYECTO**
+## 📊 ESTADO ACTUAL DEL PROYECTO
 
-- ✅ **Autenticación JWT** - Funcionando completamente
-- ✅ **Dashboard administrativo** - Con métricas en tiempo real
-- ✅ **Gestión de clientes** - CRUD completo implementado
-- ✅ **Creación de memoriales** - Formulario completo funcionando
-- ✅ **Generación de QR automática** - Con IP de red para móviles
-- ✅ **Memorial público** - Acceso vía QR desde cualquier dispositivo
-- ✅ **Página de impresión QR** - Lista para usar
-- 🟡 **Subida de fotos/videos** - En desarrollo
-- 🟡 **Sistema de comentarios** - Backend listo, frontend pendiente
-- 🟡 **Temas personalizables** - En desarrollo
+### ✅ **IMPLEMENTADO (Backend + Frontend):**
+
+**🔐 Autenticación & Admin:**
+* ✅ Login de administrador
+* ✅ Dashboard principal con métricas reales
+* ✅ Gestión completa de clientes (CRUD)
+* ✅ Gestión completa de memoriales (CRUD)
+* ✅ **Gestión de códigos QR** (nueva funcionalidad)
+
+**🎯 Funcionalidades Core:**
+* ✅ Generación automática de QR por memorial
+* ✅ Páginas públicas de memoriales
+* ✅ Sistema de comentarios con códigos de acceso
+* ✅ Subida y gestión de media (fotos/videos)
+* ✅ Configuración de privacidad de memoriales
+
+**📊 Estadísticas & Reportes:**
+* ✅ Métricas del dashboard conectadas
+* ✅ Actividad reciente (clientes y memoriales)
+* ✅ Estadísticas de QR y memoriales
+
+### 🚧 **PENDIENTE POR IMPLEMENTAR:**
+
+**📱 Frontend:**
+* 🔄 **Carga de contenido** - Upload de fotos/videos en la interfaz
+* 🔄 **Página de perfil de empresa** - Configuración y branding
+
+**⚙️ Backend (opcional/futuro):**
+* 🔄 Notificaciones por email
+* 🔄 Exportación de datos
+* 🔄 Analytics avanzados
+* 🔄 API para integración externa
+
+### 🎯 **PRIORIDADES INMEDIATAS:**
+1. **Carga de contenido** → Para que los admins suban fotos/videos
+2. **Perfil de empresa** → Personalización y configuración
 
 ## 📞 **SOPORTE**
 
