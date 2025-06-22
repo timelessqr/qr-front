@@ -4,13 +4,13 @@ import { comentarioService } from '../../../services';
 const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
   
   // ===============================
-  // 🎛️ ESTADOS
+  // 🎛️ ESTADOS SIMPLIFICADOS
   // ===============================
   const [configuracion, setConfiguracion] = useState({
     habilitados: false,
     requiereCodigo: true,
-    codigoFamiliar: '', // 🆕 Código para familiares (solo comentar)
-    codigoCliente: '',  // 🆕 Código para cliente (comentar + responder)
+    codigoFamiliar: '',
+    codigoCliente: '',
     mensaje: ''
   });
   
@@ -24,13 +24,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [totalComentarios, setTotalComentarios] = useState(0);
-  
-  // 🆕 Estados para estadísticas
-  const [estadisticas, setEstadisticas] = useState({
-    totalComentarios: 0,
-    totalRespuestas: 0,
-    statsByUserLevel: []
-  });
 
   // ===============================
   // 🔄 EFECTOS
@@ -56,7 +49,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
           ...prev,
           habilitados: result.config.habilitados || false,
           requiereCodigo: result.config.requiereCodigo || false,
-          // 🆕 Cargar ambos códigos desde el memorial
           codigoFamiliar: memorial.codigoComentarios || '',
           codigoCliente: memorial.codigoCliente || '',
           mensaje: result.config.mensaje || ''
@@ -72,7 +64,7 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
     setError('');
     
     try {
-      const result = await comentarioService.obtenerComentariosAdmin(memorial.id, page, 10);
+      const result = await comentarioService.obtenerComentariosAdmin(memorial.id, page, 20);
       
       if (result.success) {
         if (page === 1) {
@@ -84,11 +76,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         setPaginaActual(result.pagination.page);
         setTotalPaginas(result.pagination.totalPages);
         setTotalComentarios(result.pagination.total);
-        
-        // 🆕 Cargar estadísticas si están disponibles
-        if (result.stats) {
-          setEstadisticas(result.stats);
-        }
       } else {
         setError(result.message || 'Error al cargar comentarios');
       }
@@ -109,8 +96,8 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
     
     try {
       const configData = {
-        codigoComentarios: configuracion.codigoFamiliar.trim(), // Código familiar
-        codigoCliente: configuracion.codigoCliente.trim(),     // 🆕 Código de cliente
+        codigoComentarios: configuracion.codigoFamiliar.trim(),
+        codigoCliente: configuracion.codigoCliente.trim(),
         comentariosHabilitados: configuracion.habilitados,
         mensaje: configuracion.mensaje.trim()
       };
@@ -120,12 +107,10 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
       if (result.success) {
         setMensaje('✅ Configuración guardada correctamente');
         
-        // Notificar al componente padre si existe
         if (onActualizar) {
           onActualizar(result.config);
         }
         
-        // Limpiar mensaje después de 3 segundos
         setTimeout(() => setMensaje(''), 3000);
         
       } else {
@@ -140,7 +125,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
     }
   };
 
-  // 🆕 Generar ambos códigos automáticamente
   const generarCodigosAutomaticos = async () => {
     setGuardando(true);
     setError('');
@@ -156,8 +140,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         }));
         
         setMensaje(`✅ Códigos generados:\n• Familiar: ${result.codigoComentarios}\n• Cliente: ${result.codigoCliente}`);
-        
-        // Limpiar mensaje después de 5 segundos
         setTimeout(() => setMensaje(''), 5000);
         
       } else {
@@ -172,7 +154,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
     }
   };
 
-  // 🆕 Generar solo código de cliente
   const generarCodigoCliente = async () => {
     setGuardando(true);
     setError('');
@@ -187,8 +168,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         }));
         
         setMensaje(`✅ Código de cliente generado: ${result.codigoCliente}`);
-        
-        // Limpiar mensaje después de 5 segundos
         setTimeout(() => setMensaje(''), 5000);
         
       } else {
@@ -203,8 +182,11 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
     }
   };
 
-  const eliminarComentario = async (comentarioId) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este comentario?')) {
+  // 🔧 ARREGLADO: Eliminación de comentarios y respuestas
+  const eliminarComentario = async (comentarioId, esRespuesta = false) => {
+    const tipoElemento = esRespuesta ? 'respuesta' : 'comentario';
+    
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar este ${tipoElemento}?`)) {
       return;
     }
     
@@ -212,20 +194,19 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
       const result = await comentarioService.eliminarComentario(comentarioId);
       
       if (result.success) {
-        // Remover de la lista local
-        setComentarios(prev => prev.filter(c => c.id !== comentarioId));
-        setTotalComentarios(prev => prev - 1);
+        // 🔧 ARREGLADO: Recargar la lista completa para reflejar los cambios
+        await cargarComentarios(1);
         
-        setMensaje('✅ Comentario eliminado correctamente');
+        setMensaje(`✅ ${tipoElemento.charAt(0).toUpperCase() + tipoElemento.slice(1)} eliminado correctamente`);
         setTimeout(() => setMensaje(''), 3000);
         
       } else {
-        setError(result.message || 'Error al eliminar comentario');
+        setError(result.message || `Error al eliminar ${tipoElemento}`);
       }
       
     } catch (err) {
-      console.error('❌ Error eliminando comentario:', err);
-      setError('Error al eliminar el comentario');
+      console.error(`❌ Error eliminando ${tipoElemento}:`, err);
+      setError(`Error al eliminar el ${tipoElemento}`);
     }
   };
 
@@ -239,7 +220,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
   // 🎨 COMPONENTES DE UI
   // ===============================
 
-  // 🔧 ARREGLADO: Componente para mostrar tarjeta de comentario con respuestas anidadas
   const TarjetaComentario = ({ comentario }) => {
     const fechaFormateada = new Date(comentario.fechaCreacion).toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -259,7 +239,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
       }
     };
 
-    // 🆕 Determinar color según nivel de usuario
     const getAvatarColor = (nivelUsuario) => {
       return nivelUsuario === 'cliente' 
         ? 'bg-gradient-to-br from-blue-500 to-purple-500' 
@@ -272,7 +251,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         : 'bg-green-100 text-green-800';
     };
 
-    // Comentario principal con respuestas anidadas
     return (
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-red-200 transition-colors duration-200">
         {/* Comentario principal */}
@@ -305,7 +283,7 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
           </div>
           
           <button
-            onClick={() => eliminarComentario(comentario.id)}
+            onClick={() => eliminarComentario(comentario.id, false)}
             className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1"
             title="Eliminar comentario"
           >
@@ -317,7 +295,7 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
         
         <p className="text-gray-700 leading-relaxed mb-2">{comentario.mensaje}</p>
         
-        {/* Mostrar likes y información adicional */}
+        {/* Información adicional */}
         <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
           {comentario.likes > 0 && (
             <span className="flex items-center">
@@ -332,7 +310,7 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
           )}
         </div>
 
-        {/* 🔧 ARREGLADO: Mostrar respuestas anidadas si existen */}
+        {/* Respuestas anidadas */}
         {comentario.respuestas && comentario.respuestas.length > 0 && (
           <div className="mt-4 border-t pt-4">
             <div className="flex items-center mb-3">
@@ -388,7 +366,7 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
                       </div>
                       
                       <button
-                        onClick={() => eliminarComentario(respuesta.id)}
+                        onClick={() => eliminarComentario(respuesta.id, true)}
                         className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 ml-2"
                         title="Eliminar respuesta"
                       >
@@ -406,91 +384,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
       </div>
     );
   };
-
-  // 🆕 Componente de estadísticas mejorado
-  const EstadisticasComentarios = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">📊 Estadísticas</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.477 8-10 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.477-8 10-8s10 3.582 10 8z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-green-600">Comentarios</p>
-              <p className="text-2xl font-bold text-green-900">{estadisticas.totalComentarios || totalComentarios}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-blue-600">Respuestas</p>
-              <p className="text-2xl font-bold text-blue-900">{estadisticas.totalRespuestas || 0}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-purple-600">Total</p>
-              <p className="text-2xl font-bold text-purple-900">{(estadisticas.totalComentarios || 0) + (estadisticas.totalRespuestas || 0)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 🆕 Estadísticas detalladas por nivel de usuario */}
-      {estadisticas.statsByUserLevel && (
-        <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Distribución por tipo de usuario</h4>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Familiares */}
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">👥 Familiares</span>
-                <span className="text-sm text-gray-500">
-                  {(estadisticas.statsByUserLevel.familiar?.comentarios || 0) + (estadisticas.statsByUserLevel.familiar?.respuestas || 0)}
-                </span>
-              </div>
-              <div className="mt-1 text-xs text-gray-500">
-                {estadisticas.statsByUserLevel.familiar?.comentarios || 0} comentarios • {estadisticas.statsByUserLevel.familiar?.respuestas || 0} respuestas
-              </div>
-            </div>
-            
-            {/* Clientes */}
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-blue-600">👑 Clientes</span>
-                <span className="text-sm text-blue-500">
-                  {(estadisticas.statsByUserLevel.cliente?.comentarios || 0) + (estadisticas.statsByUserLevel.cliente?.respuestas || 0)}
-                </span>
-              </div>
-              <div className="mt-1 text-xs text-blue-500">
-                {estadisticas.statsByUserLevel.cliente?.comentarios || 0} comentarios • {estadisticas.statsByUserLevel.cliente?.respuestas || 0} respuestas
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   // ===============================
   // 🎯 RENDERIZADO PRINCIPAL
@@ -649,9 +542,6 @@ const ConfiguracionComentarios = ({ memorial, onActualizar }) => {
           </div>
         </form>
       </div>
-
-      {/* Estadísticas */}
-      <EstadisticasComentarios />
 
       {/* Lista de comentarios y respuestas */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { comentarioService } from '../services';
 
 const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configuracion: configInicial = {} }) => {
   
   // ===============================
-  // 🎛️ ESTADOS OPTIMIZADOS
+  // 🎛️ ESTADOS SIMPLIFICADOS
   // ===============================
   const [comentarios, setComentarios] = useState([]);
   const [configuracion, setConfiguracion] = useState(configInicial);
@@ -13,21 +13,17 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
   
-  // 🔧 OPTIMIZADO: Referencias estables para evitar re-renders
-  const inputRef = useRef(null);
-  const timeoutRef = useRef(null);
-  
   // Estados para validación de código
   const [mostrarValidacion, setMostrarValidacion] = useState(false);
   const [codigoFamiliar, setCodigoFamiliar] = useState('');
   const [validandoCodigo, setValidandoCodigo] = useState(false);
   
-  // 🔧 OPTIMIZADO: Estado de acceso más estable
-  const [acceso, setAcceso] = useState(() => ({
+  // Estado de acceso simplificado
+  const [acceso, setAcceso] = useState({
     tieneAcceso: false,
     nivel: '',
     puedeResponder: false
-  }));
+  });
   
   // Estado para el nuevo comentario
   const [nuevoComentario, setNuevoComentario] = useState({
@@ -37,7 +33,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   });
   const [enviandoComentario, setEnviandoComentario] = useState(false);
   
-  // 🆕 Estados para respuestas
+  // Estados para respuestas - SIMPLIFICADO
   const [respuestaActiva, setRespuestaActiva] = useState(null);
   const [nuevaRespuesta, setNuevaRespuesta] = useState({
     nombre: "",
@@ -52,7 +48,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   const [totalComentarios, setTotalComentarios] = useState(0);
 
   // ===============================
-  // 🔄 EFECTOS OPTIMIZADOS
+  // 🔄 EFECTOS
   // ===============================
   
   useEffect(() => {
@@ -62,7 +58,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   }, [qrCode]);
 
-  // 🔧 OPTIMIZADO: Verificar acceso existente sin causar re-renders
   const verificarAccesoExistente = useCallback(() => {
     if (!qrCode) return;
     
@@ -70,40 +65,20 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       const nivel = comentarioService.obtenerNivel(qrCode) || 'familiar';
       const puedeResponder = comentarioService.puedeResponder(qrCode);
       
-      setAcceso(prevAcceso => {
-        // Solo actualizar si realmente cambió
-        if (prevAcceso.tieneAcceso === true && 
-            prevAcceso.nivel === nivel && 
-            prevAcceso.puedeResponder === puedeResponder) {
-          return prevAcceso;
-        }
-        
-        return {
-          tieneAcceso: true,
-          nivel,
-          puedeResponder
-        };
+      setAcceso({
+        tieneAcceso: true,
+        nivel,
+        puedeResponder
       });
-      
-      console.log('🔍 DEBUG: Usuario tiene acceso:', { nivel, puedeResponder });
     }
   }, [qrCode]);
 
-  // 🔧 OPTIMIZADO: Limpiar timeouts al desmontar
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
   // ===============================
-  // 🔧 FUNCIONES PRINCIPALES OPTIMIZADAS
+  // 🔧 FUNCIONES PRINCIPALES
   // ===============================
 
   const inicializarComentarios = async () => {
-    if (loading) return; // Prevenir múltiples cargas
+    if (loading) return;
     
     setLoading(true);
     setError('');
@@ -130,7 +105,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   };
 
   const cargarComentarios = async (page = 1) => {
-    if (loadingComentarios) return; // Prevenir múltiples cargas
+    if (loadingComentarios) return;
     
     setLoadingComentarios(true);
     setError('');
@@ -148,8 +123,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         setPaginaActual(result.pagination.page);
         setTotalPaginas(result.pagination.totalPages);
         setTotalComentarios(result.pagination.total);
-        
-        console.log('📋 DEBUG: Comentarios cargados:', result.comentarios.length);
       } else {
         setError(result.message || 'Error al cargar comentarios');
       }
@@ -162,7 +135,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   };
 
-  // 🔧 OPTIMIZADO: Validar código con manejo mejorado del input
+  // 🔧 SIMPLIFICADO: Validar código sin re-renders
   const validarCodigoFamiliar = async (e) => {
     e.preventDefault();
     
@@ -171,7 +144,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       return;
     }
     
-    if (validandoCodigo) return; // Prevenir múltiples envíos
+    if (validandoCodigo) return;
     
     setValidandoCodigo(true);
     setError('');
@@ -186,7 +159,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
           permisos: result.permisos
         });
         
-        // 🔧 Actualizar estado de acceso
         setAcceso({
           tieneAcceso: true,
           nivel: result.nivel,
@@ -201,10 +173,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
           : '✅ Código familiar validado. Puedes comentar.';
         
         setMensaje(mensajeNivel);
-        
-        // 🔧 OPTIMIZADO: Usar ref para limpiar timeout
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => setMensaje(''), 3000);
+        setTimeout(() => setMensaje(''), 3000);
         
       } else {
         setError(result.message || 'Código incorrecto');
@@ -218,18 +187,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   };
 
-  // 🔧 OPTIMIZADO: Handler del input con debounce
-  const handleCodigoChange = useCallback((e) => {
-    const value = e.target.value;
-    setCodigoFamiliar(value);
-    
-    // Limpiar error cuando el usuario empiece a escribir
-    if (error && value.length > 0) {
-      setError('');
-    }
-  }, [error]);
-
-  // Agregar nuevo comentario principal
   const agregarComentario = async (e) => {
     e.preventDefault();
     
@@ -243,7 +200,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       return;
     }
     
-    if (enviandoComentario) return; // Prevenir múltiples envíos
+    if (enviandoComentario) return;
     
     setEnviandoComentario(true);
     setError('');
@@ -268,9 +225,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         setNuevoComentario({ nombre: "", mensaje: "", relacion: "familiar" });
         await cargarComentarios(1);
         setMensaje('✅ Comentario publicado correctamente');
-        
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => setMensaje(''), 3000);
+        setTimeout(() => setMensaje(''), 3000);
       } else {
         setError(result.message || 'Error al publicar comentario');
       }
@@ -283,14 +238,13 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   };
 
-  // 🆕 Crear respuesta a un comentario
   const crearRespuesta = async (comentarioId) => {
     if (!nuevaRespuesta.mensaje.trim()) {
       setError('Por favor escriba una respuesta');
       return;
     }
     
-    if (enviandoRespuesta) return; // Prevenir múltiples envíos
+    if (enviandoRespuesta) return;
     
     setEnviandoRespuesta(true);
     setError('');
@@ -316,9 +270,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         setRespuestaActiva(null);
         await cargarComentarios(1);
         setMensaje('✅ Respuesta publicada correctamente');
-        
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => setMensaje(''), 3000);
+        setTimeout(() => setMensaje(''), 3000);
       } else {
         setError(result.message || 'Error al publicar respuesta');
       }
@@ -331,12 +283,10 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   };
 
-  // 🆕 Mostrar/ocultar formulario de respuesta
   const toggleRespuesta = (comentarioId) => {
     if (!acceso.puedeResponder) {
       setError('Solo el cliente puede responder a comentarios');
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), 3000);
       return;
     }
     
@@ -349,7 +299,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
     }
   };
 
-  // 🆕 Dar like a un comentario
   const darLike = async (id) => {
     try {
       const result = await comentarioService.darLike(qrCode, id);
@@ -370,14 +319,12 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         }));
       } else {
         setError(result.message || 'Error al dar like');
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => setError(''), 3000);
+        setTimeout(() => setError(''), 3000);
       }
     } catch (err) {
       console.error('❌ Error dando like:', err);
       setError('Error al dar like');
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), 3000);
     }
   };
 
@@ -386,91 +333,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
       cargarComentarios(paginaActual + 1);
     }
   };
-
-  // ===============================
-  // 🎨 COMPONENTES DE UI OPTIMIZADOS
-  // ===============================
-
-  // 🔧 OPTIMIZADO: Formulario de validación sin re-renders
-  const FormularioValidacion = React.memo(() => (
-    <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 mb-4">
-      <h3 className="text-gray-800 font-medium mb-3">🔐 Código de Acceso</h3>
-      <p className="text-gray-600 text-sm mb-4">
-        Para dejar comentarios necesitas el código proporcionado por la familia.
-      </p>
-      
-      <form onSubmit={validarCodigoFamiliar}>
-        <div className="flex gap-3">
-          <input
-            ref={inputRef}
-            type="text"
-            value={codigoFamiliar}
-            onChange={handleCodigoChange}
-            className="flex-1 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            placeholder="Ingrese el código de acceso"
-            disabled={validandoCodigo}
-            autoComplete="off"
-            spellCheck="false"
-            style={{ fontSize: '16px' }} // Prevenir zoom en iOS
-          />
-          <button
-            type="submit"
-            disabled={validandoCodigo || !codigoFamiliar.trim()}
-            className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
-          >
-            {validandoCodigo ? 'Validando...' : 'Validar'}
-          </button>
-        </div>
-      </form>
-    </div>
-  ));
-
-  // 🔧 OPTIMIZADO: Componente de formulario de respuesta
-  const FormularioRespuesta = React.memo(({ comentarioId }) => (
-    <div className="mt-4 ml-16 bg-blue-50 rounded-lg p-4 border border-blue-100">
-      <h4 className="text-gray-800 font-medium mb-3">💬 Responder</h4>
-      <div>
-        <input
-          type="text"
-          value={nuevaRespuesta.nombre}
-          onChange={(e) => setNuevaRespuesta(prev => ({...prev, nombre: e.target.value}))}
-          className="w-full mb-3 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Tu nombre (opcional)"
-          disabled={enviandoRespuesta}
-          autoComplete="off"
-          spellCheck="false"
-          style={{ fontSize: '16px' }} // Prevenir zoom en iOS
-        />
-        <textarea
-          value={nuevaRespuesta.mensaje}
-          onChange={(e) => setNuevaRespuesta(prev => ({...prev, mensaje: e.target.value}))}
-          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-          rows="3"
-          placeholder="Escribe tu respuesta..."
-          disabled={enviandoRespuesta}
-          autoComplete="off"
-          style={{ fontSize: '16px' }} // Prevenir zoom en iOS
-        />
-        <div className="mt-3 flex justify-end gap-2">
-          <button 
-            type="button"
-            onClick={() => toggleRespuesta(comentarioId)}
-            className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-md transition duration-300"
-          >
-            Cancelar
-          </button>
-          <button 
-            type="button"
-            onClick={() => crearRespuesta(comentarioId)}
-            disabled={enviandoRespuesta || !nuevaRespuesta.mensaje.trim()}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition duration-300"
-          >
-            {enviandoRespuesta ? 'Enviando...' : 'Enviar respuesta'}
-          </button>
-        </div>
-      </div>
-    </div>
-  ));
 
   // ===============================
   // 🎯 RENDERIZADO PRINCIPAL
@@ -551,8 +413,37 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
             </div>
           )}
           
-          {/* Formulario de validación */}
-          {mostrarValidacion && <FormularioValidacion />}
+          {/* 🔧 SIMPLIFICADO: Formulario de validación */}
+          {mostrarValidacion && (
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 mb-4">
+              <h3 className="text-gray-800 font-medium mb-3">🔐 Código de Acceso</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Para dejar comentarios necesitas el código proporcionado por la familia.
+              </p>
+              
+              <form onSubmit={validarCodigoFamiliar}>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={codigoFamiliar}
+                    onChange={(e) => setCodigoFamiliar(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="Ingrese el código de acceso"
+                    disabled={validandoCodigo}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  <button
+                    type="submit"
+                    disabled={validandoCodigo || !codigoFamiliar.trim()}
+                    className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                  >
+                    {validandoCodigo ? 'Validando...' : 'Validar'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
           
           {/* Formulario principal */}
           {(acceso.tieneAcceso || !configuracion.requiereCodigo) && (
@@ -566,7 +457,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                   className="w-full mb-3 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Tu nombre (opcional)"
                   disabled={enviandoComentario}
-                  style={{ fontSize: '16px' }} // Prevenir zoom en iOS
                 />
                 <textarea
                   value={nuevoComentario.mensaje}
@@ -576,7 +466,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                   placeholder="Escribe un mensaje en memoria..."
                   required
                   disabled={enviandoComentario}
-                  style={{ fontSize: '16px' }} // Prevenir zoom en iOS
                 />
                 <div className="mt-4 flex justify-end">
                   <button 
@@ -595,13 +484,6 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
         {/* Lista de comentarios con respuestas anidadas */}
         <div className="px-6 py-6">
           <div className="space-y-6">
-            
-            {/* Debug info */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="bg-yellow-50 p-3 rounded text-xs">
-                <strong>DEBUG:</strong> Nivel: {acceso.nivel}, Puede responder: {acceso.puedeResponder ? 'SÍ' : 'NO'}, Total comentarios: {comentarios.length}
-              </div>
-            )}
             
             {/* Comentarios */}
             {comentarios.map((comentario) => {
@@ -714,9 +596,49 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                     </div>
                   )}
                   
-                  {/* Formulario de respuesta */}
+                  {/* 🔧 SIMPLIFICADO: Formulario de respuesta */}
                   {respuestaActiva === (comentario._id || comentario.id) && (
-                    <FormularioRespuesta comentarioId={comentario._id || comentario.id} />
+                    <div className="mt-4 ml-16 bg-blue-50 rounded-lg p-4 border border-blue-100">
+                      <h4 className="text-gray-800 font-medium mb-3">💬 Responder</h4>
+                      <div>
+                        <input
+                          type="text"
+                          value={nuevaRespuesta.nombre}
+                          onChange={(e) => setNuevaRespuesta(prev => ({...prev, nombre: e.target.value}))}
+                          className="w-full mb-3 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Tu nombre (opcional)"
+                          disabled={enviandoRespuesta}
+                          autoComplete="off"
+                          spellCheck={false}
+                        />
+                        <textarea
+                          value={nuevaRespuesta.mensaje}
+                          onChange={(e) => setNuevaRespuesta(prev => ({...prev, mensaje: e.target.value}))}
+                          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                          rows="3"
+                          placeholder="Escribe tu respuesta..."
+                          disabled={enviandoRespuesta}
+                          autoComplete="off"
+                        />
+                        <div className="mt-3 flex justify-end gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => toggleRespuesta(comentario._id || comentario.id)}
+                            className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-md transition duration-300"
+                          >
+                            Cancelar
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => crearRespuesta(comentario._id || comentario.id)}
+                            disabled={enviandoRespuesta || !nuevaRespuesta.mensaje.trim()}
+                            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition duration-300"
+                          >
+                            {enviandoRespuesta ? 'Enviando...' : 'Enviar respuesta'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               );
