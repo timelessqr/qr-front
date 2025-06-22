@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 const Contenido = () => {
+  const [tipoContenido, setTipoContenido] = useState("fotos"); // Estado para tipo de contenido
+  
   const fotosRecuerdos = [
     "recuerdo1.jpg",
     "recuerdo2.jpg",
@@ -20,17 +22,38 @@ const Contenido = () => {
     "recuerdo1.jpg",
   ];
 
+  // Videos de ejemplo (puedes agregar más)
+  const videosRecuerdos = [
+    "video1.mp4",
+    "video2.mp4",
+    "video3.mp4",
+    "video4.mp4",
+  ];
+
   const fotosPorPagina = 8;
+  const videosPorPagina = 6;
   const [paginaActual, setPaginaActual] = useState(1);
   const [fade, setFade] = useState(true);
   const [imagenAmpliada, setImagenAmpliada] = useState(null);
+  const [videoActual, setVideoActual] = useState(null);
   const [modalAnimation, setModalAnimation] = useState(false);
 
-  const totalPaginas = Math.ceil(fotosRecuerdos.length / fotosPorPagina);
+  // Función para obtener contenido actual según el tipo
+  const obtenerContenidoActual = () => {
+    if (tipoContenido === "fotos") {
+      return fotosRecuerdos;
+    } else {
+      return videosRecuerdos;
+    }
+  };
 
-  const fotosMostradas = fotosRecuerdos.slice(
-    (paginaActual - 1) * fotosPorPagina,
-    paginaActual * fotosPorPagina
+  const contenidoActual = obtenerContenidoActual();
+  const itemsPorPagina = tipoContenido === "fotos" ? fotosPorPagina : videosPorPagina;
+  const totalPaginas = Math.ceil(contenidoActual.length / itemsPorPagina);
+
+  const contenidoMostrado = contenidoActual.slice(
+    (paginaActual - 1) * itemsPorPagina,
+    paginaActual * itemsPorPagina
   );
 
   const cambiarPagina = (nuevaPagina) => {
@@ -43,25 +66,42 @@ const Contenido = () => {
     }
   };
 
+  const cambiarTipoContenido = (tipo) => {
+    if (tipo !== tipoContenido) {
+      setFade(false);
+      setTimeout(() => {
+        setTipoContenido(tipo);
+        setPaginaActual(1); // Reiniciar a la primera página
+        setFade(true);
+      }, 200);
+    }
+  };
+
   const abrirImagen = (nombreImagen) => {
     setImagenAmpliada(nombreImagen);
     setModalAnimation(true);
   };
 
-  const cerrarImagen = () => {
+  const abrirVideo = (nombreVideo) => {
+    setVideoActual(nombreVideo);
+    setModalAnimation(true);
+  };
+
+  const cerrarModal = () => {
     setModalAnimation(false);
     setTimeout(() => {
       setImagenAmpliada(null);
-    }, 300); // Debe coincidir con la duración de la animación
+      setVideoActual(null);
+    }, 300);
   };
 
   useEffect(() => {
     setFade(true);
-  }, [paginaActual]);
+  }, [paginaActual, tipoContenido]);
 
   return (
     <div className="animate-fadeIn">
-      {/* Modal para imagen ampliada con transiciones */}
+      {/* Modal para imagen ampliada */}
       {imagenAmpliada && (
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
@@ -70,7 +110,7 @@ const Contenido = () => {
               : "bg-opacity-0 backdrop-blur-0"
           }`}
           style={{ backgroundColor: "rgba(0,0,0,0.9)" }}
-          onClick={cerrarImagen}
+          onClick={cerrarModal}
         >
           <div
             className={`relative max-w-4xl w-full transform transition-all duration-300 ${
@@ -81,8 +121,8 @@ const Contenido = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={cerrarImagen}
-              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 transition-colors duration-200"
+              onClick={cerrarModal}
+              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 transition-colors duration-200 z-10"
             >
               &times;
             </button>
@@ -98,85 +138,184 @@ const Contenido = () => {
         </div>
       )}
 
+      {/* Modal para video */}
+      {videoActual && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+            modalAnimation
+              ? "bg-opacity-100 backdrop-blur-sm"
+              : "bg-opacity-0 backdrop-blur-0"
+          }`}
+          style={{ backgroundColor: "rgba(0,0,0,0.9)" }}
+          onClick={cerrarModal}
+        >
+          <div
+            className={`relative max-w-4xl w-full transform transition-all duration-300 ${
+              modalAnimation
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-90"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={cerrarModal}
+              className="absolute -top-12 right-0 text-white text-3xl hover:text-gray-300 transition-colors duration-200 z-10"
+            >
+              &times;
+            </button>
+            <video
+              src={`/videos/recuerdos/${videoActual}`}
+              controls
+              autoPlay
+              className="w-full max-h-[80vh] object-contain"
+            >
+              Tu navegador no soporta el elemento video.
+            </video>
+            <div className="text-white text-center mt-4 text-lg">
+              {videoActual.replace(".mp4", "")}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center pt-4">
           Galería de recuerdos
         </h2>
 
-        {/* Navegación horizontal de subcategorías */}
+        {/* Navegación horizontal - SOLO fotos y videos */}
         <div className="flex px-6 overflow-x-auto border-b mb-6">
-          <button className="px-4 py-2 font-medium text-red-600 border-b-2 border-red-500 focus:outline-none mr-4">
-            Fotografías
-          </button>
-          <button className="px-4 py-2 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 focus:outline-none mr-4">
-            Videos
-          </button>
-          <button className="px-4 py-2 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 focus:outline-none mr-4">
-            Artesanías
-          </button>
-          <button className="px-4 py-2 font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 focus:outline-none">
-            Homenajes
-          </button>
-        </div>
-
-        {/* Cuadrícula de imágenes con transición */}
-        <div className="px-6 pb-8">
-          <div
-            className={`grid grid-cols-2 md:grid-cols-4 gap-4 transition-opacity duration-300 ${
-              fade ? "opacity-100" : "opacity-0"
+          <button 
+            onClick={() => cambiarTipoContenido("fotos")}
+            className={`px-4 py-2 font-medium focus:outline-none mr-4 border-b-2 transition-colors duration-200 ${
+              tipoContenido === "fotos" 
+                ? "text-red-600 border-red-500" 
+                : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
             }`}
           >
-            {fotosMostradas.map((nombre, i) => (
-              <div
-                key={i}
-                className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
-                onClick={() => abrirImagen(nombre)}
-              >
-                <img
-                  src={`/img/recuerdos/${nombre}`}
-                  alt={`Recuerdo ${(paginaActual - 1) * fotosPorPagina + i + 1}`}
-                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <span className="text-white font-medium">Ver foto</span>
+            📸 Fotografías
+          </button>
+          <button 
+            onClick={() => cambiarTipoContenido("videos")}
+            className={`px-4 py-2 font-medium focus:outline-none border-b-2 transition-colors duration-200 ${
+              tipoContenido === "videos" 
+                ? "text-red-600 border-red-500" 
+                : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
+            }`}
+          >
+            🎥 Videos
+          </button>
+        </div>
+
+        {/* Contenido dinámico según el tipo seleccionado */}
+        <div className="px-6 pb-8">
+          {tipoContenido === "fotos" ? (
+            // Cuadrícula de fotos
+            <div
+              className={`grid grid-cols-2 md:grid-cols-4 gap-4 transition-opacity duration-300 ${
+                fade ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {contenidoMostrado.map((nombre, i) => (
+                <div
+                  key={i}
+                  className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
+                  onClick={() => abrirImagen(nombre)}
+                >
+                  <img
+                    src={`/img/recuerdos/${nombre}`}
+                    alt={`Recuerdo ${(paginaActual - 1) * itemsPorPagina + i + 1}`}
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-white font-medium">📸 Ver foto</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            // Cuadrícula de videos
+            <div
+              className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${
+                fade ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {contenidoMostrado.map((nombre, i) => (
+                <div
+                  key={i}
+                  className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
+                  onClick={() => abrirVideo(nombre)}
+                >
+                  <div className="relative bg-gray-800 h-48 flex items-center justify-center">
+                    {/* Thumbnail del video - puedes cambiar esto por una imagen de preview real */}
+                    <div className="text-white text-6xl opacity-70 group-hover:opacity-90 transition-opacity duration-300">
+                      ▶️
+                    </div>
+                    <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                      <span className="text-white font-medium text-lg">🎥 Reproducir video</span>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3">
+                    <h4 className="font-medium text-gray-900 truncate">
+                      {nombre.replace(".mp4", "")}
+                    </h4>
+                    <p className="text-sm text-gray-500">Video memorial</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Paginación horizontal */}
-          <div className="flex justify-center mt-8">
-            <nav className="inline-flex rounded-md shadow">
-              <button
-                onClick={() => cambiarPagina(paginaActual - 1)}
-                disabled={paginaActual === 1}
-                className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
-              >
-                Anterior
-              </button>
-              {[...Array(totalPaginas)].map((_, idx) => (
+          {totalPaginas > 1 && (
+            <div className="flex justify-center mt-8">
+              <nav className="inline-flex rounded-md shadow">
                 <button
-                  key={idx}
-                  onClick={() => cambiarPagina(idx + 1)}
-                  className={`px-3 py-2 border-t border-b border-gray-300 bg-white transition-colors duration-200 ${
-                    paginaActual === idx + 1
-                      ? "text-gray-700 font-medium"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
+                  onClick={() => cambiarPagina(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                  className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
                 >
-                  {idx + 1}
+                  Anterior
                 </button>
-              ))}
-              <button
-                onClick={() => cambiarPagina(paginaActual + 1)}
-                disabled={paginaActual === totalPaginas}
-                className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
-              >
-                Siguiente
-              </button>
-            </nav>
-          </div>
+                {[...Array(totalPaginas)].map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => cambiarPagina(idx + 1)}
+                    className={`px-3 py-2 border-t border-b border-gray-300 bg-white transition-colors duration-200 ${
+                      paginaActual === idx + 1
+                        ? "text-gray-700 font-medium bg-gray-50"
+                        : "text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => cambiarPagina(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas}
+                  className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
+                >
+                  Siguiente
+                </button>
+              </nav>
+            </div>
+          )}
         </div>
+
+        {/* Mensaje si no hay contenido */}
+        {contenidoMostrado.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">
+              {tipoContenido === "fotos" ? "📸" : "🎥"}
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay {tipoContenido} disponibles
+            </h3>
+            <p className="text-gray-600">
+              Los {tipoContenido} aparecerán aquí cuando se agreguen al memorial.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
