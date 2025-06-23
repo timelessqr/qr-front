@@ -324,5 +324,3 @@ memorial-site/
 - ✅ Generar memoriales con QR
 - ✅ Acceso público desde móviles via QR  
 - ✅ Imprimir códigos QR para entrega
-
-**¡Perfecto para empresas funerarias que quieren ofrecer memoriales digitales a sus clientes!** 🌹

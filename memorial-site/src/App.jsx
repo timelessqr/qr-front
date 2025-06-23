@@ -21,6 +21,8 @@ import NewMemorialPage from './pages/admin/NewMemorial';
 import PrintQRPage from './pages/admin/PrintQR';
 import MemorialComentarios from './pages/admin/MemorialComentarios';
 import QRManagement from './pages/admin/QRManagement';
+import MediaManagement from './pages/admin/MediaManagement';
+import MediaManagementTest from './pages/admin/MediaManagementTest';
 
 // Componentes del memorial original (para mantener compatibilidad)
 import Banner from './components/Banner';
@@ -147,6 +149,9 @@ function App() {
               <Route path="memorials/edit/:memorialId" element={<NewMemorialPage />} />
               <Route path="memorials/:memorialId/print-qr" element={<PrintQRPage />} />
               <Route path="memorials/:memorialId/comentarios" element={<MemorialComentarios />} />
+              
+              {/* Gestión de Media */}
+              <Route path="media" element={<MediaManagement />} />
               
               {/* Gestión de QR */}
               <Route path="qr-codes" element={<QRManagement />} />
