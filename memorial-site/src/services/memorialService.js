@@ -74,6 +74,16 @@ class MemorialService {
     }
   }
 
+  // 📷 Actualizar datos específicos del memorial (fotoJoven, etc.)
+  async updateMemorialData(memorialId, memorialData) {
+    try {
+      const response = await api.put(`/profiles/${memorialId}/memorial`, memorialData);
+      return getApiData(response);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
   // 🗑️ Eliminar memorial
   async deleteMemorial(memorialId) {
     try {

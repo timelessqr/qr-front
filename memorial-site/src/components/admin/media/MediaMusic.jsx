@@ -29,27 +29,44 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
       const response = await mediaService.getByProfile(profileId, {
         seccion: 'musica'
       });
-      setMusicTracks(response.data);
-      updateStats();
+      
+      console.log('🎵 MediaMusic - Respuesta API:', response);
+      
+      // Extraer el array de media correctamente
+      const tracksArray = response.data?.media || response.media || [];
+      console.log('🎵 MediaMusic - Tracks array:', tracksArray);
+      
+      setMusicTracks(Array.isArray(tracksArray) ? tracksArray : []);
     } catch (error) {
-      console.error('Error cargando música:', error);
+      console.error('❌ Error cargando música:', error);
+      setMusicTracks([]); // Asegurar que sea array vacío en caso de error
     } finally {
       setLoading(false);
     }
   };
 
   const updateStats = useCallback(() => {
+    if (!Array.isArray(musicTracks)) {
+      console.warn('⚠️ MusicTracks no es un array:', musicTracks);
+      return;
+    }
+    
+    const totalMusica = musicTracks.length;
+    
+    console.log('📊 Music Stats calculados:', { totalMusica });
+    
     if (onStatsUpdate) {
-      onStatsUpdate(prev => ({
-        ...prev,
-        totalMusica: musicTracks.length
-      }));
+      onStatsUpdate({
+        totalMusica
+      });
     }
   }, [musicTracks, onStatsUpdate]);
 
   useEffect(() => {
-    updateStats();
-  }, [updateStats]);
+    if (musicTracks.length >= 0) { // Solo cuando musicTracks esté cargado (incluye array vacío)
+      updateStats();
+    }
+  }, [musicTracks.length]); // Solo depende de la longitud
 
   // Extraer ID de video de YouTube de diferentes formatos de URL
   const extractYouTubeId = (url) => {
@@ -88,15 +105,14 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
       const videoId = extractYouTubeId(newTrack.youtubeUrl);
       const videoInfo = await getYouTubeInfo(videoId);
 
-      const formData = new FormData();
-      formData.append('seccion', 'musica');
-      formData.append('titulo', newTrack.titulo || videoInfo.title);
-      formData.append('descripcion', newTrack.descripcion || 'Música del recuerdo');
-      formData.append('youtubeUrl', newTrack.youtubeUrl);
-      formData.append('youtubeId', videoId);
-      formData.append('thumbnail', videoInfo.thumbnail);
+      const trackData = {
+        url: newTrack.youtubeUrl,
+        videoId: videoId,
+        titulo: newTrack.titulo || videoInfo.title,
+        descripcion: newTrack.descripcion || 'Música del recuerdo'
+      };
 
-      const response = await mediaService.addYouTubeTrack(profileId, formData);
+      const response = await mediaService.addYouTubeTrack(profileId, trackData);
 
       if (response.success) {
         await loadMusicTracks();
@@ -104,6 +120,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
       }
     } catch (error) {
       console.error('Error agregando música:', error);
+      alert('Error al agregar la canción. Por favor, inténtalo de nuevo.');
     } finally {
       setAdding(false);
     }
@@ -251,9 +268,9 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                 <div className="flex items-center p-4">
                   {/* Thumbnail */}
                   <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden mr-4">
-                    {track.thumbnail ? (
+                    {track.metadata?.thumbnail ? (
                       <img
-                        src={track.thumbnail}
+                        src={track.metadata.thumbnail}
                         alt="Thumbnail"
                         className="w-full h-full object-cover"
                       />
@@ -271,7 +288,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <h5 className="font-medium text-gray-900 truncate">
-                          {track.titulo || track.nombreOriginal}
+                          {track.titulo || track.archivo?.nombreOriginal || 'Canción sin título'}
                         </h5>
                         <p className="text-sm text-gray-500 truncate">
                           {track.descripcion || 'Música del recuerdo'}
@@ -309,7 +326,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                       )}
                     </button>
                     <button
-                      onClick={() => window.open(track.youtubeUrl || `https://www.youtube.com/watch?v=${track.youtubeId}`, '_blank')}
+                      onClick={() => window.open(track.archivo?.url || `https://www.youtube.com/watch?v=${track.metadata?.videoId}`, '_blank')}
                       className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                       title="Abrir en YouTube"
                     >
@@ -330,13 +347,13 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                 </div>
 
                 {/* Player embed si está siendo reproducido */}
-                {playingTrack === track._id && track.youtubeId && (
+                {playingTrack === track._id && track.metadata?.videoId && (
                   <div className="border-t bg-gray-50 p-4">
                     <div className="aspect-video max-w-md mx-auto">
                       <iframe
                         width="100%"
                         height="100%"
-                        src={`https://www.youtube.com/embed/${track.youtubeId}?autoplay=1`}
+                        src={`https://www.youtube.com/embed/${track.metadata.videoId}?autoplay=1`}
                         title={track.titulo}
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

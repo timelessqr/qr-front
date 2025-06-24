@@ -30,29 +30,47 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
     try {
       setLoading(true);
       const response = await mediaService.getByProfile(profileId, {
-        seccion: 'fondos'
+        seccion: 'fondos',
+        tipo: 'foto'
       });
-      setBackgrounds(response.data);
-      updateStats();
+      
+      console.log('🖼️ MediaBackgrounds - Respuesta API:', response);
+      
+      // Extraer el array de media correctamente
+      const backgroundsArray = response.data?.media || response.media || [];
+      console.log('🖼️ MediaBackgrounds - Backgrounds array:', backgroundsArray);
+      
+      setBackgrounds(Array.isArray(backgroundsArray) ? backgroundsArray : []);
     } catch (error) {
-      console.error('Error cargando fondos:', error);
+      console.error('❌ Error cargando fondos:', error);
+      setBackgrounds([]); // Asegurar que sea array vacío en caso de error
     } finally {
       setLoading(false);
     }
   };
 
   const updateStats = useCallback(() => {
+    if (!Array.isArray(backgrounds)) {
+      console.warn('⚠️ Backgrounds no es un array:', backgrounds);
+      return;
+    }
+    
+    const totalFondos = backgrounds.length;
+    
+    console.log('📊 Backgrounds Stats calculados:', { totalFondos });
+    
     if (onStatsUpdate) {
-      onStatsUpdate(prev => ({
-        ...prev,
-        totalFondos: backgrounds.length
-      }));
+      onStatsUpdate({
+        totalFondos
+      });
     }
   }, [backgrounds, onStatsUpdate]);
 
   useEffect(() => {
-    updateStats();
-  }, [updateStats]);
+    if (backgrounds.length >= 0) { // Solo cuando backgrounds esté cargado (incluye array vacío)
+      updateStats();
+    }
+  }, [backgrounds.length]); // Solo depende de la longitud
 
   const handleFileSelect = async (files) => {
     if (!files || files.length === 0) return;
@@ -64,9 +82,12 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
 
     Array.from(files).forEach((file) => {
       // Validar que sean solo imágenes
-      if (file.type.startsWith('image/')) {
-        formData.append('media', file);
+      if (!file.type.startsWith('image/')) {
+        console.warn('Archivo no es imagen:', file.name);
+        return;
       }
+      
+      formData.append('files', file); // Cambiar 'media' por 'files'
     });
 
     try {
@@ -87,8 +108,10 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    const files = e.dataTransfer.files;
-    handleFileSelect(files);
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    if (files.length > 0) {
+      handleFileSelect(files);
+    }
   };
 
   const handleDragOver = (e) => {
@@ -159,7 +182,7 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
         {/* Simulación del memorial */}
         <div className="relative h-96 bg-gray-900 overflow-hidden">
           <img
-            src={background.url}
+            src={background.url || background.archivo?.url}
             alt="Fondo del memorial"
             className="w-full h-full object-cover filter blur-sm opacity-60"
           />
@@ -326,8 +349,8 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
                 {/* Preview con efecto memorial */}
                 <div className="aspect-video bg-gray-100 relative overflow-hidden">
                   <img
-                    src={background.url}
-                    alt={background.nombreOriginal}
+                    src={background.url || background.archivo?.url}
+                    alt={background.titulo || background.archivo?.nombreOriginal || 'Fondo del memorial'}
                     className="w-full h-full object-cover filter blur-sm opacity-60"
                   />
                   
@@ -358,7 +381,7 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
                         </svg>
                       </button>
                       <button
-                        onClick={() => window.open(background.url, '_blank')}
+                        onClick={() => window.open(background.url || background.archivo?.url, '_blank')}
                         className="p-2 bg-blue-600 rounded-full text-white hover:bg-blue-700"
                         title="Ver imagen original"
                       >
@@ -381,8 +404,8 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
 
                 {/* Info */}
                 <div className="p-3">
-                  <h4 className="font-medium text-gray-900 text-sm truncate" title={background.nombreOriginal}>
-                    {background.nombreOriginal}
+                  <h4 className="font-medium text-gray-900 text-sm truncate" title={background.titulo || background.archivo?.nombreOriginal}>
+                    {background.titulo || background.archivo?.nombreOriginal || 'Fondo sin título'}
                   </h4>
                   <p className="text-xs text-gray-500 mt-1">
                     {new Date(background.createdAt).toLocaleDateString()}

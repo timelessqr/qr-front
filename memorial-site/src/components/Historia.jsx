@@ -29,11 +29,25 @@ const Historia = ({ memorialData }) => {
           <div className="md:w-1/3">
             <div className="aspect-square rounded-lg overflow-hidden shadow-md mb-4">
               <img 
-                src={memorialData?.fotoPerfil || memorialData?.galeria?.[0]?.url || '/img/default-profile.jpg'} 
-                alt={`Foto de ${memorialData?.nombre || 'joven'}`} 
+                src={
+                  // Prioridad 1: fotoJoven
+                  memorialData?.fotoJoven ||
+                  // Prioridad 2: fotoPerfil
+                  memorialData?.fotoPerfil ||
+                  // Prioridad 3: primera foto de la galería
+                  memorialData?.galeria?.[0]?.url ||
+                  // Prioridad 4: imagen por defecto
+                  '/img/default-profile.jpg'
+                } 
+                alt={`Foto de ${memorialData?.nombre || 'persona'} en su juventud`} 
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.target.src = '/img/foto-abuelita-joven.jpg';
+                  // Si falla la imagen, intentar con la foto de perfil como fallback
+                  if (e.target.src !== memorialData?.fotoPerfil && memorialData?.fotoPerfil) {
+                    e.target.src = memorialData.fotoPerfil;
+                  } else {
+                    e.target.src = '/img/foto-abuelita-joven.jpg';
+                  }
                 }}
               />
             </div>
