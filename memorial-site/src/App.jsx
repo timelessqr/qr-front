@@ -15,14 +15,13 @@ import LoginPage from './pages/admin/Login';
 import DashboardPage from './pages/admin/Dashboard';
 import ClientsPage from './pages/admin/Clients';
 import NewClientPage from './pages/admin/NewClient';
-import ClientDetailsPage from './pages/admin/ClientDetails'; // 🔧 NUEVO: Página de detalles del cliente
+import ClientDetailsPage from './pages/admin/ClientDetails';
 import MemorialsPage from './pages/admin/Memorials';
 import NewMemorialPage from './pages/admin/NewMemorial';
 import PrintQRPage from './pages/admin/PrintQR';
 import MemorialComentarios from './pages/admin/MemorialComentarios';
 import QRManagement from './pages/admin/QRManagement';
 import MediaManagement from './pages/admin/MediaManagement';
-import MediaManagementTest from './pages/admin/MediaManagementTest';
 
 // Componentes del memorial original (para mantener compatibilidad)
 import Banner from './components/Banner';
@@ -140,7 +139,7 @@ function App() {
               {/* Gestión de clientes */}
               <Route path="clients" element={<ClientsPage />} />
               <Route path="clients/new" element={<NewClientPage />} />
-              <Route path="clients/:id" element={<ClientDetailsPage />} /> {/* 🔧 ACTUALIZADO: Usar ClientDetailsPage */}
+              <Route path="clients/:id" element={<ClientDetailsPage />} />
               <Route path="clients/:id/edit" element={<NewClientPage />} />
               
               {/* Gestión de memoriales */}

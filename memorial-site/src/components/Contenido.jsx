@@ -1,34 +1,16 @@
 import React, { useState, useEffect } from "react";
 
-const Contenido = () => {
+const Contenido = ({ memorialData }) => {
   const [tipoContenido, setTipoContenido] = useState("fotos"); // Estado para tipo de contenido
   
-  const fotosRecuerdos = [
-    "recuerdo1.jpg",
-    "recuerdo2.jpg",
-    "recuerdo3.jpg",
-    "recuerdo4.jpg",
-    "recuerdo5.jpg",
-    "recuerdo6.jpg",
-    "recuerdo7.jpg",
-    "recuerdo8.jpg",
-    "recuerdo8.jpg",
-    "recuerdo7.jpg",
-    "recuerdo6.jpg",
-    "recuerdo5.jpg",
-    "recuerdo4.jpg",
-    "recuerdo3.jpg",
-    "recuerdo2.jpg",
-    "recuerdo1.jpg",
-  ];
-
-  // Videos de ejemplo (puedes agregar más)
-  const videosRecuerdos = [
-    "video1.mp4",
-    "video2.mp4",
-    "video3.mp4",
-    "video4.mp4",
-  ];
+  // Obtener fotos y videos reales del memorial
+  const fotosRecuerdos = memorialData?.galeria?.filter(item => 
+    item.tipo === 'foto' || item.tipo === 'imagen'
+  ) || [];
+  
+  const videosRecuerdos = memorialData?.videos?.filter(item => 
+    item.tipo === 'video'
+  ) || [];
 
   const fotosPorPagina = 8;
   const videosPorPagina = 6;
@@ -77,13 +59,13 @@ const Contenido = () => {
     }
   };
 
-  const abrirImagen = (nombreImagen) => {
-    setImagenAmpliada(nombreImagen);
+  const abrirImagen = (foto) => {
+    setImagenAmpliada(foto);
     setModalAnimation(true);
   };
 
-  const abrirVideo = (nombreVideo) => {
-    setVideoActual(nombreVideo);
+  const abrirVideo = (video) => {
+    setVideoActual(video);
     setModalAnimation(true);
   };
 
@@ -127,12 +109,12 @@ const Contenido = () => {
               &times;
             </button>
             <img
-              src={`/img/recuerdos/${imagenAmpliada}`}
-              alt="Imagen ampliada"
+              src={imagenAmpliada.url || imagenAmpliada.archivo?.url}
+              alt={imagenAmpliada.titulo || "Imagen del memorial"}
               className="w-full max-h-[80vh] object-contain"
             />
             <div className="text-white text-center mt-4 text-lg">
-              {imagenAmpliada.replace(".jpg", "")}
+              {imagenAmpliada.titulo || imagenAmpliada.archivo?.nombreOriginal || "Recuerdo del memorial"}
             </div>
           </div>
         </div>
@@ -164,7 +146,7 @@ const Contenido = () => {
               &times;
             </button>
             <video
-              src={`/videos/recuerdos/${videoActual}`}
+              src={videoActual.url || videoActual.archivo?.url}
               controls
               autoPlay
               className="w-full max-h-[80vh] object-contain"
@@ -172,7 +154,7 @@ const Contenido = () => {
               Tu navegador no soporta el elemento video.
             </video>
             <div className="text-white text-center mt-4 text-lg">
-              {videoActual.replace(".mp4", "")}
+              {videoActual.titulo || videoActual.archivo?.nombreOriginal || "Video del memorial"}
             </div>
           </div>
         </div>
@@ -216,16 +198,19 @@ const Contenido = () => {
                 fade ? "opacity-100" : "opacity-0"
               }`}
             >
-              {contenidoMostrado.map((nombre, i) => (
+              {contenidoMostrado.map((foto, i) => (
                 <div
-                  key={i}
+                  key={foto.id || foto._id || i}
                   className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
-                  onClick={() => abrirImagen(nombre)}
+                  onClick={() => abrirImagen(foto)}
                 >
                   <img
-                    src={`/img/recuerdos/${nombre}`}
-                    alt={`Recuerdo ${(paginaActual - 1) * itemsPorPagina + i + 1}`}
+                    src={foto.url || foto.archivo?.url}
+                    alt={foto.titulo || `Recuerdo ${(paginaActual - 1) * itemsPorPagina + i + 1}`}
                     className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.src = '/img/default-photo.jpg';
+                    }}
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <span className="text-white font-medium">📸 Ver foto</span>
@@ -240,24 +225,32 @@ const Contenido = () => {
                 fade ? "opacity-100" : "opacity-0"
               }`}
             >
-              {contenidoMostrado.map((nombre, i) => (
+              {contenidoMostrado.map((video, i) => (
                 <div
-                  key={i}
+                  key={video.id || video._id || i}
                   className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
-                  onClick={() => abrirVideo(nombre)}
+                  onClick={() => abrirVideo(video)}
                 >
                   <div className="relative bg-gray-800 h-48 flex items-center justify-center">
-                    {/* Thumbnail del video - puedes cambiar esto por una imagen de preview real */}
-                    <div className="text-white text-6xl opacity-70 group-hover:opacity-90 transition-opacity duration-300">
-                      ▶️
-                    </div>
+                    {/* Thumbnail del video o imagen de preview */}
+                    {video.thumbnail ? (
+                      <img 
+                        src={video.thumbnail}
+                        alt={video.titulo || "Preview del video"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-white text-6xl opacity-70 group-hover:opacity-90 transition-opacity duration-300">
+                        ▶️
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                       <span className="text-white font-medium text-lg">🎥 Reproducir video</span>
                     </div>
                   </div>
                   <div className="bg-white p-3">
                     <h4 className="font-medium text-gray-900 truncate">
-                      {nombre.replace(".mp4", "")}
+                      {video.titulo || video.archivo?.nombreOriginal || "Video sin título"}
                     </h4>
                     <p className="text-sm text-gray-500">Video memorial</p>
                   </div>

@@ -69,18 +69,32 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
   const handleFileSelect = async (files) => {
     if (!files || files.length === 0) return;
 
+    // Prevenir múltiples uploads simultáneos
+    if (uploading) {
+      console.warn('⚠️ Upload ya en progreso, ignorando nueva selección');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('seccion', 'galeria');
     formData.append('titulo', 'Videos del memorial');
     formData.append('descripcion', 'Videos conmemorativos del memorial');
 
-    Array.from(files).forEach((file, index) => {
-      // Validar que sea video
+    // Filtrar solo videos y evitar duplicados
+    const validFiles = Array.from(files).filter(file => {
       if (!file.type.startsWith('video/')) {
         console.warn('Archivo no es video:', file.name);
-        return;
+        return false;
       }
-      
+      return true;
+    });
+
+    if (validFiles.length === 0) {
+      alert('No se seleccionaron videos válidos');
+      return;
+    }
+
+    validFiles.forEach((file, index) => {
       formData.append('files', file);
       setUploadProgress(prev => ({
         ...prev,
@@ -90,19 +104,35 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
 
     try {
       setUploading(true);
+      console.log('🎥 Iniciando upload de', validFiles.length, 'videos');
       
       const response = await mediaService.uploadFiles(profileId, formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        // Aquí podrías actualizar el progreso específico de cada archivo
+        // Actualizar progreso para todos los archivos
+        validFiles.forEach(file => {
+          setUploadProgress(prev => ({
+            ...prev,
+            [file.name]: percentCompleted
+          }));
+        });
       });
 
       if (response.success) {
+        console.log('✅ Upload exitoso:', response);
         await loadVideos();
         setUploadProgress({});
-        // Mostrar notificación de éxito
+        
+        // Limpiar el input
+        const fileInput = document.getElementById('file-upload-videos');
+        if (fileInput) {
+          fileInput.value = '';
+        }
+      } else {
+        throw new Error(response.message || 'Error en la subida');
       }
     } catch (error) {
       console.error('Error subiendo videos:', error);
+      alert('Error al subir los videos: ' + error.message);
       setUploadProgress({});
     } finally {
       setUploading(false);

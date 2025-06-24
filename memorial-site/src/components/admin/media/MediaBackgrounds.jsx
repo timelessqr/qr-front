@@ -75,31 +75,56 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
   const handleFileSelect = async (files) => {
     if (!files || files.length === 0) return;
 
+    // Prevenir múltiples uploads simultáneos
+    if (uploading) {
+      console.warn('⚠️ Upload ya en progreso, ignorando nueva selección');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('seccion', 'fondos');
     formData.append('titulo', 'Fondos del memorial');
     formData.append('descripcion', 'Imágenes de fondo para el slideshow del memorial');
 
-    Array.from(files).forEach((file) => {
-      // Validar que sean solo imágenes
+    // Filtrar solo imágenes y evitar duplicados
+    const validFiles = Array.from(files).filter(file => {
       if (!file.type.startsWith('image/')) {
         console.warn('Archivo no es imagen:', file.name);
-        return;
+        return false;
       }
-      
+      return true;
+    });
+
+    if (validFiles.length === 0) {
+      alert('No se seleccionaron imágenes válidas');
+      return;
+    }
+
+    validFiles.forEach((file) => {
       formData.append('files', file); // Cambiar 'media' por 'files'
     });
 
     try {
       setUploading(true);
+      console.log('🖼️ Iniciando upload de', validFiles.length, 'fondos');
       
       const response = await mediaService.uploadFiles(profileId, formData);
 
       if (response.success) {
+        console.log('✅ Upload exitoso:', response);
         await loadBackgrounds();
+        
+        // Limpiar el input
+        const fileInput = document.getElementById('file-upload-fondos');
+        if (fileInput) {
+          fileInput.value = '';
+        }
+      } else {
+        throw new Error(response.message || 'Error en la subida');
       }
     } catch (error) {
       console.error('Error subiendo fondos:', error);
+      alert('Error al subir los fondos: ' + error.message);
     } finally {
       setUploading(false);
     }
