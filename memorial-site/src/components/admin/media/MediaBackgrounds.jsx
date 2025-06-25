@@ -64,7 +64,7 @@ const MediaBackgrounds = ({ selectedMemorial, onStatsUpdate }) => {
         totalFondos
       });
     }
-  }, [backgrounds, onStatsUpdate]);
+  }, [backgrounds]); // ← REMOVER onStatsUpdate de las dependencias
 
   useEffect(() => {
     if (backgrounds.length >= 0) { // Solo cuando backgrounds esté cargado (incluye array vacío)

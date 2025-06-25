@@ -58,7 +58,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
         totalVideos
       });
     }
-  }, [videos, onStatsUpdate]);
+  }, [videos]); // ← REMOVER onStatsUpdate de las dependencias
 
   useEffect(() => {
     if (videos.length >= 0) { // Solo cuando videos esté cargado (incluye array vacío)

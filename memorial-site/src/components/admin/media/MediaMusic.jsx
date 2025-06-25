@@ -60,7 +60,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
         totalMusica
       });
     }
-  }, [musicTracks, onStatsUpdate]);
+  }, [musicTracks]); // ← REMOVER onStatsUpdate de las dependencias
 
   useEffect(() => {
     if (musicTracks.length >= 0) { // Solo cuando musicTracks esté cargado (incluye array vacío)

@@ -52,7 +52,7 @@ const MediaProfilePhotos = ({ selectedMemorial, onStatsUpdate }) => {
         totalProfilePhotos
       });
     }
-  }, [currentPhotos, onStatsUpdate]);
+  }, [currentPhotos]); // ← REMOVER onStatsUpdate de las dependencias
 
   useEffect(() => {
     updateStats();

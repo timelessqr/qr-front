@@ -63,7 +63,7 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
         totalFotos
       });
     }
-  }, [photos, onStatsUpdate]);
+  }, [photos]); // ← REMOVER onStatsUpdate de las dependencias
 
   useEffect(() => {
     if (photos.length >= 0) { // Solo cuando photos esté cargado (incluye array vacío)
