@@ -85,17 +85,35 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
     formData.append('titulo', 'Fotografías del memorial');
     formData.append('descripcion', 'Galería de fotos del memorial');
 
-    // Filtrar solo imágenes y evitar duplicados
-    const validFiles = Array.from(files).filter(file => {
-      if (!file.type.startsWith('image/')) {
-        console.warn('Archivo no es imagen:', file.name);
-        return false;
+    // Validar formatos y tamaños
+    const validFiles = [];
+    const errors = [];
+    
+    Array.from(files).forEach(file => {
+      // Validar formato
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        errors.push(`${file.name}: Solo se permiten archivos JPG y PNG`);
+        return;
       }
-      return true;
+      
+      // Validar tamaño (10MB máximo)
+      const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+      if (file.size > maxSize) {
+        errors.push(`${file.name}: Excede el tamaño máximo (10MB)`);
+        return;
+      }
+      
+      validFiles.push(file);
     });
 
+    if (errors.length > 0) {
+      alert('Errores encontrados:\n' + errors.join('\n'));
+      return;
+    }
+
     if (validFiles.length === 0) {
-      alert('No se seleccionaron imágenes válidas');
+      alert('No se seleccionaron archivos válidos');
       return;
     }
 
@@ -147,7 +165,7 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileSelect(files);
     }
@@ -304,7 +322,7 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
               o haz clic en "Subir Fotos" para seleccionar
             </p>
             <p className="text-sm text-gray-400 mt-2">
-              Formatos soportados: JPG, PNG, GIF, WEBP (máx. 100MB)
+              Formatos soportados: JPG, PNG • Tamaño máximo: 10MB
             </p>
           </div>
         </div>

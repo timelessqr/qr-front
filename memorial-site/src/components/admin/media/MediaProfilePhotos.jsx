@@ -64,9 +64,17 @@ const MediaProfilePhotos = ({ selectedMemorial, onStatsUpdate }) => {
 
     const file = files[0]; // Solo tomamos el primer archivo
 
-    // Validar que sea imagen
-    if (!file.type.startsWith('image/')) {
-      alert('Solo se permiten imágenes');
+    // Validar formato de imagen
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      alert('Solo se permiten archivos JPG y PNG');
+      return;
+    }
+
+    // Validar tamaño del archivo (10MB máximo)
+    const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+    if (file.size > maxSize) {
+      alert('El archivo excede el tamaño máximo permitido (10MB)');
       return;
     }
 
@@ -94,6 +102,9 @@ const MediaProfilePhotos = ({ selectedMemorial, onStatsUpdate }) => {
         } else {
           updateData.fotoJoven = imageUrl;
         }
+        
+        // Log para debugging
+        console.log(`✅ Foto de ${type} subida exitosamente:`, imageUrl);
         
         const updateResponse = await memorialService.updateMemorialData(profileId, updateData);
         
@@ -393,7 +404,7 @@ const MediaProfilePhotos = ({ selectedMemorial, onStatsUpdate }) => {
                 <li><strong>Imagen Circular:</strong> Se usa en la cabecera y como respaldo en biografía</li>
                 <li><strong>Imagen de Biografía:</strong> Tiene prioridad y se muestra en la sección biografía</li>
                 <li>Si no hay imagen de biografía, se usa automáticamente la circular</li>
-                <li>Formatos: JPG, PNG • Tamaño máximo: 100MB</li>
+                <li>Formatos: JPG, PNG • Tamaño máximo: 10MB</li>
               </ul>
             </div>
           </div>
