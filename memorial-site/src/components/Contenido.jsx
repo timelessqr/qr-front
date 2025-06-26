@@ -123,9 +123,7 @@ const Contenido = ({ memorialData }) => {
                 }
               }}
             />
-            <div className="text-white text-center mt-4 text-lg">
-              {imagenAmpliada.titulo || imagenAmpliada.archivo?.nombreOriginal || "Recuerdo del memorial"}
-            </div>
+            {/* Título removido para vista más limpia */}
           </div>
         </div>
       )}
@@ -163,9 +161,7 @@ const Contenido = ({ memorialData }) => {
             >
               Tu navegador no soporta el elemento video.
             </video>
-            <div className="text-white text-center mt-4 text-lg">
-              {videoActual.titulo || videoActual.archivo?.nombreOriginal || "Video del memorial"}
-            </div>
+            {/* Título removido para vista más limpia */}
           </div>
         </div>
       )}
@@ -248,29 +244,29 @@ const Contenido = ({ memorialData }) => {
                   className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
                   onClick={() => abrirVideo(video)}
                 >
-                  <div className="relative bg-gray-800 h-48 flex items-center justify-center">
-                    {/* Thumbnail del video o imagen de preview */}
-                    {video.thumbnail ? (
-                      <img 
-                        src={video.thumbnail}
-                        alt={video.titulo || "Preview del video"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-white text-6xl opacity-70 group-hover:opacity-90 transition-opacity duration-300">
-                        ▶️
-                      </div>
-                    )}
+                  <div className="relative bg-gray-800 h-48">
+                    {/* Video como preview */}
+                    <video
+                      src={video.url || video.archivo?.url}
+                      className="w-full h-full object-cover"
+                      preload="metadata"
+                      muted
+                      onError={(e) => {
+                        // Si falla el video, mostrar emoji
+                        e.target.style.display = 'none';
+                        if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
+                          const emojiDiv = document.createElement('div');
+                          emojiDiv.className = 'emoji-fallback w-full h-full flex items-center justify-center text-4xl bg-gray-800 text-white';
+                          emojiDiv.textContent = '🎥';
+                          e.target.parentNode.appendChild(emojiDiv);
+                        }
+                      }}
+                    />
                     <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                       <span className="text-white font-medium text-lg">🎥 Reproducir video</span>
                     </div>
                   </div>
-                  <div className="bg-white p-3">
-                    <h4 className="font-medium text-gray-900 truncate">
-                      {video.titulo || video.archivo?.nombreOriginal || "Video sin título"}
-                    </h4>
-                    <p className="text-sm text-gray-500">Video memorial</p>
-                  </div>
+                  {/* Info del video removida para vista más limpia */}
                 </div>
               ))}
             </div>

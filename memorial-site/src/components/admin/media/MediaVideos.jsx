@@ -98,7 +98,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
     const formData = new FormData();
     formData.append('seccion', 'galeria');
     formData.append('titulo', 'Videos del memorial');
-    formData.append('descripcion', 'Videos conmemorativos del memorial');
+    formData.append('descripcion', 'Videos del memorial');
 
     // Validar formatos, tamaños y duración
     const validFiles = [];
@@ -448,7 +448,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
                   </div>
                 </div>
 
-                {video.descripcion && (
+                {video.descripcion && video.descripcion !== 'Videos del memorial' && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <p className="text-xs text-gray-600 line-clamp-2">
                       {video.descripcion}
