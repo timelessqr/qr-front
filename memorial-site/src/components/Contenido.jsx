@@ -112,6 +112,16 @@ const Contenido = ({ memorialData }) => {
               src={imagenAmpliada.url || imagenAmpliada.archivo?.url}
               alt={imagenAmpliada.titulo || "Imagen del memorial"}
               className="w-full max-h-[80vh] object-contain"
+              onError={(e) => {
+                // Si falla la imagen, mostrar mensaje con emoji
+                e.target.style.display = 'none';
+                if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
+                  const errorDiv = document.createElement('div');
+                  errorDiv.className = 'emoji-fallback w-full h-64 flex flex-col items-center justify-center text-white';
+                  errorDiv.innerHTML = '<div class="text-6xl mb-4">📸</div><div class="text-lg">Imagen no disponible</div>';
+                  e.target.parentNode.appendChild(errorDiv);
+                }
+              }}
             />
             <div className="text-white text-center mt-4 text-lg">
               {imagenAmpliada.titulo || imagenAmpliada.archivo?.nombreOriginal || "Recuerdo del memorial"}
@@ -209,7 +219,14 @@ const Contenido = ({ memorialData }) => {
                     alt={foto.titulo || `Recuerdo ${(paginaActual - 1) * itemsPorPagina + i + 1}`}
                     className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
-                      e.target.src = '/img/placeholder-photo.jpg'; // Emoji como fallback
+                      // Si falla la imagen, mostrar emoji
+                      e.target.style.display = 'none';
+                      if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
+                        const emojiDiv = document.createElement('div');
+                        emojiDiv.className = 'emoji-fallback w-full h-48 flex items-center justify-center text-4xl bg-gray-100';
+                        emojiDiv.textContent = '📸';
+                        e.target.parentNode.appendChild(emojiDiv);
+                      }
                     }}
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

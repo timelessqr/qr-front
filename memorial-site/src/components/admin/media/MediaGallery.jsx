@@ -11,8 +11,6 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
   const [dragOver, setDragOver] = useState(false);
-  const [currentFotoJoven, setCurrentFotoJoven] = useState(null);
-  const [updatingFotoJoven, setUpdatingFotoJoven] = useState(null);
 
   // Obtener el profileId del memorial
   const profileId = selectedMemorial?._id;
@@ -20,8 +18,6 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
   useEffect(() => {
     if (profileId) {
       loadPhotos();
-      // Obtener la fotoJoven actual del memorial
-      setCurrentFotoJoven(selectedMemorial?.fotoJoven);
     }
   }, [profileId, selectedMemorial?.fotoPerfil, selectedMemorial?.fotoJoven]);
 
@@ -33,11 +29,21 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
         tipo: 'foto'
       });
       
-      console.log('📸 MediaGallery - Respuesta API:', response);
+      console.log('📸 MediaGallery - Respuesta API completa:', response);
       
       // Extraer el array de media correctamente
       const photosArray = response.data?.media || response.media || [];
       console.log('📸 MediaGallery - Photos array:', photosArray);
+      
+      // Debug: revisar cada foto
+      photosArray.forEach((photo, index) => {
+        console.log(`🖼️ Foto ${index}:`, {
+          _id: photo._id,
+          id: photo.id,
+          titulo: photo.titulo,
+          createdAt: photo.createdAt
+        });
+      });
       
       // FILTRAR: Excluir fotos que estén siendo usadas como fotoPerfil o fotoJoven
       const currentFotoPerfil = selectedMemorial?.fotoPerfil;
@@ -192,6 +198,14 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
   };
 
   const handleDelete = async (photoId) => {
+    console.log('🔍 Debug photo object:', photoId); // Debug completo
+    
+    if (!photoId) {
+      console.error('❌ Error: photoId es undefined');
+      alert('Error: No se puede eliminar la foto (ID no válido)');
+      return;
+    }
+    
     if (!window.confirm('¿Estás seguro de eliminar esta foto?')) return;
 
     try {
@@ -201,49 +215,12 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
       await mediaService.deleteMedia(photoId);
       console.log('✅ Foto eliminada de Cloudinary y base de datos');
       
-      // Si la foto eliminada era la fotoJoven, limpiar el campo del memorial
-      const deletedPhoto = photos.find(p => p._id === photoId);
-      if (deletedPhoto) {
-        const deletedPhotoUrl = deletedPhoto.url || deletedPhoto.archivo?.url;
-        
-        if (currentFotoJoven === deletedPhotoUrl) {
-          // Actualizar el memorial para quitar la referencia
-          await memorialService.updateMemorialData(profileId, { fotoJoven: null });
-          setCurrentFotoJoven(null);
-          console.log('✅ Referencia de fotoJoven eliminada del memorial');
-        }
-      }
-      
       // Recargar la lista de fotos
       await loadPhotos();
       
     } catch (error) {
       console.error('Error eliminando foto:', error);
       alert('Error al eliminar la foto: ' + error.message);
-    }
-  };
-
-  // 🔥 FUNCIONALIDAD CLAVE: Establecer como foto de biografía
-  const handleSetFotoJoven = async (photo) => {
-    try {
-      setUpdatingFotoJoven(photo._id);
-      
-      // Llamar al servicio para actualizar el memorial
-      const result = await memorialService.updateMemorialData(profileId, {
-        fotoJoven: photo.url || photo.archivo?.url
-      });
-      
-      // Actualizar el estado local
-      setCurrentFotoJoven(photo.url || photo.archivo?.url);
-      
-      // Mostrar notificación de éxito
-      console.log('✅ Foto de biografía actualizada:', result);
-      
-    } catch (error) {
-      console.error('❌ Error estableciendo foto de biografía:', error);
-      alert('Error al establecer la foto de biografía. Por favor, inténtalo de nuevo.');
-    } finally {
-      setUpdatingFotoJoven(null);
     }
   };
 
@@ -256,12 +233,7 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
   };
 
   const getPhotoUrl = (photo) => {
-    return photo.url || photo.archivo?.url || '/img/default-photo.jpg';
-  };
-
-  const isCurrentFotoJoven = (photo) => {
-    const photoUrl = getPhotoUrl(photo);
-    return currentFotoJoven === photoUrl;
+    return photo.url || photo.archivo?.url;
   };
 
   return (
@@ -275,9 +247,6 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
           
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <span>Total: {Array.isArray(photos) ? photos.length : 0} fotos</span>
-            {currentFotoJoven && (
-              <span className="text-blue-600">• Foto de biografía seleccionada</span>
-            )}
           </div>
         </div>
 
@@ -300,26 +269,6 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
             </svg>
             Subir Fotos
           </label>
-        </div>
-      </div>
-
-      {/* Información especial sobre foto de biografía */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h4 className="text-sm font-medium text-blue-800">
-              Foto de Biografía
-            </h4>
-            <p className="mt-1 text-sm text-blue-700">
-              Usa el botón azul <svg className="inline w-4 h-4 mx-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg> 
-              en cualquier foto para establecerla como la imagen principal que acompaña la biografía del memorial.
-            </p>
-          </div>
         </div>
       </div>
 
@@ -383,18 +332,6 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {photos.map((photo) => (
             <div key={photo._id} className="bg-white rounded-lg shadow-sm border overflow-hidden group relative">
-              {/* Indicador de fotoJoven */}
-              {isCurrentFotoJoven(photo) && (
-                <div className="absolute top-2 left-2 z-10">
-                  <div className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                    Foto Biografía
-                  </div>
-                </div>
-              )}
-
               {/* Preview */}
               <div className="aspect-square bg-gray-100 relative">
                 <img
@@ -402,50 +339,31 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
                   alt={photo.titulo || photo.archivo?.nombreOriginal || 'Foto del memorial'}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = '/img/default-photo.jpg';
+                    // Si falla la imagen, mostrar emoji
+                    e.target.style.display = 'none';
+                    if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
+                      const emojiDiv = document.createElement('div');
+                      emojiDiv.className = 'emoji-fallback w-full h-full flex items-center justify-center text-4xl bg-gray-100';
+                      emojiDiv.textContent = '📸';
+                      e.target.parentNode.appendChild(emojiDiv);
+                    }
                   }}
                 />
 
-                {/* Overlay con acciones */}
+                {/* Overlay con solo botón de eliminar */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-x-2">
-                    {/* 🔥 BOTÓN ESPECIAL: Establecer como foto de biografía */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
-                      onClick={() => handleSetFotoJoven(photo)}
-                      disabled={updatingFotoJoven === photo._id || isCurrentFotoJoven(photo)}
-                      className={`p-2 rounded-full text-white transition-all ${
-                        isCurrentFotoJoven(photo)
-                          ? 'bg-blue-600 cursor-not-allowed'
-                          : 'bg-blue-500 hover:bg-blue-600'
-                      }`}
-                      title={isCurrentFotoJoven(photo) ? 'Esta es la foto de biografía actual' : 'Establecer como foto de biografía'}
-                    >
-                      {updatingFotoJoven === photo._id ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => window.open(getPhotoUrl(photo), '_blank')}
-                      className="p-2 bg-white rounded-full text-gray-700 hover:bg-gray-100"
-                      title="Ver imagen"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                    
-                    <button
-                      onClick={() => handleDelete(photo._id)}
-                      className="p-2 bg-red-600 rounded-full text-white hover:bg-red-700"
+                      onClick={() => {
+                        console.log('🔍 Debug photo completo:', photo);
+                        console.log('🔍 Photo._id:', photo._id);
+                        console.log('🔍 Photo.id:', photo.id);
+                        handleDelete(photo._id || photo.id);
+                      }}
+                      className="p-3 bg-red-600 rounded-full text-white hover:bg-red-700 transition-colors"
                       title="Eliminar foto"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -458,12 +376,9 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
                 <h4 className="font-medium text-gray-900 text-sm truncate" title={photo.titulo || photo.archivo?.nombreOriginal}>
                   {photo.titulo || photo.archivo?.nombreOriginal || 'Sin título'}
                 </h4>
-                <div className="flex items-center justify-between mt-1">
+                <div className="mt-1">
                   <span className="text-xs text-gray-500">
                     {formatFileSize(photo.archivo?.tamaño || 0)}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {new Date(photo.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
