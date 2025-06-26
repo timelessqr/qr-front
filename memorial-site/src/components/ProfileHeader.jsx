@@ -4,17 +4,25 @@ const ProfileHeader = ({ memorialData }) => {
   return (
     <div className="relative">
       <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl">
-          {/* 🔧 FIX: Usar foto real del memorial */}
-          <img 
-            src={memorialData?.fotoPerfil || '/img/default-profile.jpg'} 
-            alt={`Foto de ${memorialData?.nombre || 'perfil'}`} 
-            className="w-full h-full object-cover object-center"
-            onError={(e) => {
-              // Fallback a imagen por defecto si la imagen del memorial falla
-              e.target.src = '/img/abuelita.jpg';
-            }}
-          />
+        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100">
+          {memorialData?.fotoPerfil ? (
+            <img 
+              src={memorialData.fotoPerfil} 
+              alt={`Foto de ${memorialData?.nombre || 'perfil'}`} 
+              className="w-full h-full object-cover object-center"
+              onError={(e) => {
+                // Si falla cargar la imagen real, mostrar emoji
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            className={`w-full h-full flex items-center justify-center text-4xl md:text-5xl ${memorialData?.fotoPerfil ? 'hidden' : 'flex'}`}
+            style={{ display: memorialData?.fotoPerfil ? 'none' : 'flex' }}
+          >
+            👤
+          </div>
         </div>
       </div>
       <div className="pt-24 pb-6 px-6 text-center">
@@ -26,11 +34,11 @@ const ProfileHeader = ({ memorialData }) => {
         </p>
         <div className="flex items-center justify-center mt-4">
           <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-            <img src="/img/banderaChile.jpg" alt="Bandera del país" className="h-4 w-6 mr-2" />
+            <span className="text-lg mr-2">🇨🇱</span>
             <p className="text-gray-700">
               {memorialData?.ubicacion?.ciudad && memorialData?.ubicacion?.pais
                 ? `${memorialData.ubicacion.ciudad}, ${memorialData.ubicacion.pais}`
-                : 'Ubicación no especificada'
+                : 'Santiago, Chile'
               }
             </p>
           </div>

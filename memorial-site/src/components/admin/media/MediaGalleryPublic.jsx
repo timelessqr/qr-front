@@ -19,7 +19,7 @@ const MediaGalleryPublic = ({ selectedMemorial, onStatsUpdate }) => {
     if (profileId) {
       loadGalleryData();
     }
-  }, [profileId]);
+  }, [profileId, selectedMemorial?.fotoPerfil, selectedMemorial?.fotoJoven]);
 
   const loadGalleryData = async () => {
     try {
@@ -36,12 +36,26 @@ const MediaGalleryPublic = ({ selectedMemorial, onStatsUpdate }) => {
       const allMedia = response.data?.media || response.media || [];
       console.log('🎬 MediaGalleryPublic - All media:', allMedia);
       
-      // Filtrar fotos y videos
-      const fotos = allMedia.filter(item => {
+      // FILTRAR: Excluir fotos que estén siendo usadas como fotoPerfil o fotoJoven
+      const currentFotoPerfil = selectedMemorial?.fotoPerfil;
+      const currentFotoJoven = selectedMemorial?.fotoJoven;
+      
+      const mediaFiltrada = allMedia.filter(item => {
+        if (item.tipo === 'foto' || item.tipo === 'imagen') {
+          const itemUrl = item.url || item.archivo?.url;
+          return itemUrl !== currentFotoPerfil && itemUrl !== currentFotoJoven;
+        }
+        return true; // Mantener videos y otros tipos
+      });
+      
+      console.log('🔍 MediaGalleryPublic - Media filtrada (sin perfil/biografía):', mediaFiltrada.length);
+      
+      // Filtrar fotos y videos de la media filtrada
+      const fotos = mediaFiltrada.filter(item => {
         return item.tipo === 'foto' || item.tipo === 'imagen';
       });
       
-      const videos = allMedia.filter(item => {
+      const videos = mediaFiltrada.filter(item => {
         return item.tipo === 'video';
       });
       
@@ -176,7 +190,12 @@ const MediaGalleryPublic = ({ selectedMemorial, onStatsUpdate }) => {
                       alt={item.titulo || 'Foto del memorial'}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
-                        e.target.src = '/img/default-photo.jpg';
+                        // Si falla la imagen, ocultar y mostrar emoji
+                        e.target.style.display = 'none';
+                        const emojiDiv = document.createElement('div');
+                        emojiDiv.className = 'w-full h-full flex items-center justify-center text-4xl bg-gray-100';
+                        emojiDiv.textContent = '📸';
+                        e.target.parentNode.appendChild(emojiDiv);
                       }}
                     />
                   </div>
@@ -298,7 +317,12 @@ const MediaGalleryPublic = ({ selectedMemorial, onStatsUpdate }) => {
                 alt={selectedItem.titulo || "Imagen del memorial"}
                 className="w-full max-h-[80vh] object-contain rounded-lg"
                 onError={(e) => {
-                  e.target.src = '/img/default-photo.jpg';
+                  // Si falla la imagen, mostrar mensaje con emoji
+                  e.target.style.display = 'none';
+                  const errorDiv = document.createElement('div');
+                  errorDiv.className = 'w-full h-64 flex flex-col items-center justify-center text-white bg-gray-800 rounded-lg';
+                  errorDiv.innerHTML = '<div class="text-6xl mb-4">📸</div><div class="text-lg">Imagen no disponible</div>';
+                  e.target.parentNode.appendChild(errorDiv);
                 }}
               />
             ) : (

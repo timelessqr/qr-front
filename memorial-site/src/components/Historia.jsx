@@ -27,29 +27,37 @@ const Historia = ({ memorialData }) => {
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Biografía</h2>
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/3">
-            <div className="aspect-square rounded-lg overflow-hidden shadow-md mb-4">
-              <img 
-                src={
-                  // Prioridad 1: fotoJoven
-                  memorialData?.fotoJoven ||
-                  // Prioridad 2: fotoPerfil
-                  memorialData?.fotoPerfil ||
-                  // Prioridad 3: primera foto de la galería
-                  memorialData?.galeria?.[0]?.url ||
-                  // Prioridad 4: imagen por defecto
-                  '/img/default-profile.jpg'
-                } 
-                alt={`Foto de ${memorialData?.nombre || 'persona'} en su juventud`} 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Si falla la imagen, intentar con la foto de perfil como fallback
-                  if (e.target.src !== memorialData?.fotoPerfil && memorialData?.fotoPerfil) {
-                    e.target.src = memorialData.fotoPerfil;
-                  } else {
-                    e.target.src = '/img/foto-abuelita-joven.jpg';
-                  }
+            <div className="aspect-square rounded-lg overflow-hidden shadow-md mb-4 bg-gray-100">
+              {/* Verificar si hay imagen para mostrar */}
+              {(memorialData?.fotoJoven || memorialData?.fotoPerfil || memorialData?.galeria?.[0]?.url) ? (
+                <img 
+                  src={
+                    // Prioridad 1: fotoJoven
+                    memorialData?.fotoJoven ||
+                    // Prioridad 2: fotoPerfil
+                    memorialData?.fotoPerfil ||
+                    // Prioridad 3: primera foto de la galería
+                    memorialData?.galeria?.[0]?.url
+                  } 
+                  alt={`Foto de ${memorialData?.nombre || 'persona'} en su juventud`} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Si falla la imagen, mostrar emoji
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                className={`w-full h-full flex items-center justify-center text-6xl ${
+                  (memorialData?.fotoJoven || memorialData?.fotoPerfil || memorialData?.galeria?.[0]?.url) ? 'hidden' : 'flex'
+                }`}
+                style={{ 
+                  display: (memorialData?.fotoJoven || memorialData?.fotoPerfil || memorialData?.galeria?.[0]?.url) ? 'none' : 'flex' 
                 }}
-              />
+              >
+                📸
+              </div>
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
               <h3 className="font-bold text-gray-800 mb-4">Datos personales</h3>

@@ -209,7 +209,7 @@ const Contenido = ({ memorialData }) => {
                     alt={foto.titulo || `Recuerdo ${(paginaActual - 1) * itemsPorPagina + i + 1}`}
                     className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
-                      e.target.src = '/img/default-photo.jpg';
+                      e.target.src = '/img/placeholder-photo.jpg'; // Emoji como fallback
                     }}
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

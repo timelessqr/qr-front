@@ -23,7 +23,7 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
       // Obtener la fotoJoven actual del memorial
       setCurrentFotoJoven(selectedMemorial?.fotoJoven);
     }
-  }, [profileId]);
+  }, [profileId, selectedMemorial?.fotoPerfil, selectedMemorial?.fotoJoven]);
 
   const loadPhotos = async () => {
     try {
@@ -39,7 +39,18 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
       const photosArray = response.data?.media || response.media || [];
       console.log('📸 MediaGallery - Photos array:', photosArray);
       
-      setPhotos(Array.isArray(photosArray) ? photosArray : []);
+      // FILTRAR: Excluir fotos que estén siendo usadas como fotoPerfil o fotoJoven
+      const currentFotoPerfil = selectedMemorial?.fotoPerfil;
+      const currentFotoJoven = selectedMemorial?.fotoJoven;
+      
+      const filteredPhotos = photosArray.filter(photo => {
+        const photoUrl = photo.url || photo.archivo?.url;
+        return photoUrl !== currentFotoPerfil && photoUrl !== currentFotoJoven;
+      });
+      
+      console.log('🔍 MediaGallery - Fotos filtradas (sin perfil/biografía):', filteredPhotos.length);
+      
+      setPhotos(Array.isArray(filteredPhotos) ? filteredPhotos : []);
     } catch (error) {
       console.error('❌ Error cargando fotos:', error);
       setPhotos([]); // Asegurar que sea array vacío en caso de error
@@ -184,16 +195,31 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
     if (!window.confirm('¿Estás seguro de eliminar esta foto?')) return;
 
     try {
+      console.log('🗑️ Eliminando foto ID:', photoId);
+      
+      // Eliminar de Cloudinary y base de datos
       await mediaService.deleteMedia(photoId);
+      console.log('✅ Foto eliminada de Cloudinary y base de datos');
+      
+      // Si la foto eliminada era la fotoJoven, limpiar el campo del memorial
+      const deletedPhoto = photos.find(p => p._id === photoId);
+      if (deletedPhoto) {
+        const deletedPhotoUrl = deletedPhoto.url || deletedPhoto.archivo?.url;
+        
+        if (currentFotoJoven === deletedPhotoUrl) {
+          // Actualizar el memorial para quitar la referencia
+          await memorialService.updateMemorialData(profileId, { fotoJoven: null });
+          setCurrentFotoJoven(null);
+          console.log('✅ Referencia de fotoJoven eliminada del memorial');
+        }
+      }
+      
+      // Recargar la lista de fotos
       await loadPhotos();
       
-      // Si la foto eliminada era la fotoJoven, actualizar el estado
-      const deletedPhoto = photos.find(p => p._id === photoId);
-      if (deletedPhoto && currentFotoJoven === deletedPhoto.url) {
-        setCurrentFotoJoven(null);
-      }
     } catch (error) {
       console.error('Error eliminando foto:', error);
+      alert('Error al eliminar la foto: ' + error.message);
     }
   };
 

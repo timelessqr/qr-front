@@ -143,6 +143,28 @@ const MediaProfilePhotos = ({ selectedMemorial, onStatsUpdate }) => {
     }
 
     try {
+      const currentUrl = currentPhotos[type === 'perfil' ? 'fotoPerfil' : 'fotoJoven'];
+      
+      if (currentUrl) {
+        // Buscar el media ID en la base de datos para eliminarlo completamente
+        const mediaList = await mediaService.getByProfile(profileId, {
+          seccion: 'perfil',
+          tipo: 'foto'
+        });
+        
+        // Encontrar el media que corresponde a esta URL
+        const mediaToDelete = mediaList.data?.media?.find(media => 
+          media.archivo?.url === currentUrl || media.url === currentUrl
+        );
+        
+        if (mediaToDelete) {
+          // Eliminar de Cloudinary y base de datos
+          await mediaService.deleteMedia(mediaToDelete._id || mediaToDelete.id);
+          console.log('✅ Archivo eliminado de Cloudinary y base de datos');
+        }
+      }
+      
+      // Actualizar el campo del memorial
       const updateData = {};
       updateData[type === 'perfil' ? 'fotoPerfil' : 'fotoJoven'] = null;
       
