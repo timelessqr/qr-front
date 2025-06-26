@@ -1,5 +1,5 @@
 // ====================================
-// src/components/admin/media/MediaVideos.jsx - Gestión de videos del memorial
+// src/components/admin/media/MediaVideos.jsx - Gestión de videos del memorial con Cloudinary
 // ====================================
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaService from '../../../services/mediaService';
@@ -66,6 +66,26 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
     }
   }, [videos.length]); // Solo depende de la longitud
 
+  const validateVideoDuration = (file) => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        // Límite de 1 minuto (60 segundos)
+        resolve(video.duration <= 60);
+      };
+      
+      video.onerror = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(false); // Si no se puede validar, rechazar
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileSelect = async (files) => {
     if (!files || files.length === 0) return;
 
@@ -80,17 +100,49 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
     formData.append('titulo', 'Videos del memorial');
     formData.append('descripcion', 'Videos conmemorativos del memorial');
 
-    // Filtrar solo videos y evitar duplicados
-    const validFiles = Array.from(files).filter(file => {
-      if (!file.type.startsWith('video/')) {
-        console.warn('Archivo no es video:', file.name);
-        return false;
+    // Validar formatos, tamaños y duración
+    const validFiles = [];
+    const errors = [];
+    
+    const fileValidations = await Promise.all(
+      Array.from(files).map(async (file) => {
+        // Validar formato
+        const allowedTypes = ['video/mp4', 'video/mov', 'video/avi', 'video/wmv', 'video/quicktime'];
+        if (!allowedTypes.includes(file.type.toLowerCase())) {
+          return { file, error: `${file.name}: Solo se permiten videos MP4, MOV, AVI, WMV` };
+        }
+        
+        // Validar tamaño (20MB máximo)
+        const maxSize = 20 * 1024 * 1024; // 20MB en bytes
+        if (file.size > maxSize) {
+          return { file, error: `${file.name}: Excede el tamaño máximo (20MB)` };
+        }
+        
+        // Validar duración
+        const isDurationValid = await validateVideoDuration(file);
+        if (!isDurationValid) {
+          return { file, error: `${file.name}: Excede la duración máxima (1 minuto)` };
+        }
+        
+        return { file, error: null };
+      })
+    );
+
+    fileValidations.forEach(validation => {
+      if (validation.error) {
+        errors.push(validation.error);
+      } else {
+        validFiles.push(validation.file);
       }
-      return true;
     });
 
+    if (errors.length > 0) {
+      alert('Errores encontrados:\n' + errors.join('\n'));
+      return;
+    }
+
     if (validFiles.length === 0) {
-      alert('No se seleccionaron videos válidos');
+      alert('No se seleccionaron archivos válidos');
       return;
     }
 
@@ -104,7 +156,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
 
     try {
       setUploading(true);
-      console.log('🎥 Iniciando upload de', validFiles.length, 'videos');
+      console.log('🎥 Iniciando upload de', validFiles.length, 'videos a Cloudinary');
       
       const response = await mediaService.uploadFiles(profileId, formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -118,7 +170,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
       });
 
       if (response.success) {
-        console.log('✅ Upload exitoso:', response);
+        console.log('✅ Upload exitoso a Cloudinary:', response);
         await loadVideos();
         setUploadProgress({});
         
@@ -158,13 +210,29 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
   };
 
   const handleDelete = async (videoId) => {
+    console.log('🔍 Debug video object:', videoId); // Debug completo
+    
+    if (!videoId) {
+      console.error('❌ Error: videoId es undefined');
+      alert('Error: No se puede eliminar el video (ID no válido)');
+      return;
+    }
+    
     if (!window.confirm('¿Estás seguro de eliminar este video?')) return;
 
     try {
+      console.log('🗑️ Eliminando video ID:', videoId);
+      
+      // Eliminar de Cloudinary y base de datos
       await mediaService.deleteMedia(videoId);
+      console.log('✅ Video eliminado de Cloudinary y base de datos');
+      
+      // Recargar la lista de videos
       await loadVideos();
+      
     } catch (error) {
       console.error('Error eliminando video:', error);
+      alert('Error al eliminar el video: ' + error.message);
     }
   };
 
@@ -206,7 +274,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
           <input
             type="file"
             multiple
-            accept="video/*"
+            accept="video/mp4,video/mov,video/avi,video/wmv,video/quicktime"
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
             id="file-upload-videos"
@@ -223,7 +291,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
         </div>
       </div>
 
-      {/* Información sobre formatos */}
+      {/* Información sobre formatos actualizada */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div className="flex items-start">
           <div className="flex-shrink-0">
@@ -233,11 +301,10 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
           </div>
           <div className="ml-3">
             <h4 className="text-sm font-medium text-amber-800">
-              Consideraciones para Videos
+              Límites para Videos - Cloudinary
             </h4>
             <p className="mt-1 text-sm text-amber-700">
-              Los videos pueden tardar más en procesarse. Formatos recomendados: MP4, MOV, AVI. 
-              Tamaño máximo: 100MB por archivo.
+              Tamaño máximo: 20MB • Duración máxima: 1 minuto • Formatos: MP4, MOV, AVI, WMV
             </p>
           </div>
         </div>
@@ -262,13 +329,13 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
           </div>
           <div>
             <h4 className="text-lg font-medium text-gray-900">
-              {uploading ? 'Subiendo videos...' : 'Arrastra videos aquí'}
+              {uploading ? 'Subiendo videos a Cloudinary...' : 'Arrastra videos aquí'}
             </h4>
             <p className="text-gray-500">
               o haz clic en "Subir Videos" para seleccionar
             </p>
             <p className="text-sm text-gray-400 mt-2">
-              Formatos soportados: MP4, MOV, AVI, WMV (máx. 100MB)
+              MP4, MOV, AVI, WMV • Máx. 20MB • Máx. 1 minuto
             </p>
           </div>
         </div>
@@ -312,34 +379,36 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
                   preload="metadata"
                   onError={(e) => {
                     console.error('Error cargando video:', e);
+                    // Si falla el video, mostrar emoji
+                    e.target.style.display = 'none';
+                    if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
+                      const emojiDiv = document.createElement('div');
+                      emojiDiv.className = 'emoji-fallback w-full h-full flex items-center justify-center text-4xl bg-gray-800 text-white';
+                      emojiDiv.textContent = '🎥';
+                      e.target.parentNode.appendChild(emojiDiv);
+                    }
                   }}
                 >
+                  {/* Fallback para navegadores que no soportan video */}
                   <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
+                    <span className="text-4xl">🎥</span>
                   </div>
                 </video>
 
-                {/* Overlay con acciones */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <div className="flex space-x-2">
+                {/* Overlay con solo botón de eliminar */}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
-                      onClick={() => window.open(getVideoUrl(video), '_blank')}
-                      className="p-2 bg-white rounded-full text-gray-700 hover:bg-gray-100 shadow-lg"
-                      title="Abrir video en nueva pestaña"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                    
-                    <button
-                      onClick={() => handleDelete(video._id)}
-                      className="p-2 bg-red-600 rounded-full text-white hover:bg-red-700 shadow-lg"
+                      onClick={() => {
+                        console.log('🔍 Debug video completo:', video);
+                        console.log('🔍 Video._id:', video._id);
+                        console.log('🔍 Video.id:', video.id);
+                        handleDelete(video._id || video.id);
+                      }}
+                      className="p-3 bg-red-600 rounded-full text-white hover:bg-red-700 transition-colors"
                       title="Eliminar video"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -393,9 +462,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
       ) : (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
+            <span className="text-2xl">🎥</span>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             Sin videos
