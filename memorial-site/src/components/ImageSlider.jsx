@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const ImageSlider = ({ images, interval = 5000 }) => {
+const ImageSlider = ({ images, interval = 5000, backgroundOpacity = 0.6 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [validImages, setValidImages] = useState([]);
 
@@ -30,7 +30,7 @@ const ImageSlider = ({ images, interval = 5000 }) => {
       })
       .filter(url => url && url.trim() !== ''); // Filtrar URLs vacías
 
-    console.log('🖼️ ImageSlider - Imágenes procesadas:', processedImages);
+    // console.log('🖼️ ImageSlider - Imágenes procesadas:', processedImages);
     setValidImages(processedImages);
     
     // Resetear índice si es necesario
@@ -51,11 +51,11 @@ const ImageSlider = ({ images, interval = 5000 }) => {
 
   // No renderizar si no hay imágenes válidas
   if (!validImages || validImages.length === 0) {
-    console.log('🖼️ ImageSlider - No hay imágenes válidas para mostrar');
+    // console.log('🖼️ ImageSlider - No hay imágenes válidas para mostrar');
     return null;
   }
 
-  console.log('🖼️ ImageSlider - Renderizando con', validImages.length, 'imágenes, índice actual:', currentIndex);
+  // console.log('🖼️ ImageSlider - Renderizando con', validImages.length, 'imágenes, índice actual:', currentIndex);
 
   return (
     <div className="absolute inset-0 overflow-hidden rounded-b-lg z-0">
@@ -67,13 +67,16 @@ const ImageSlider = ({ images, interval = 5000 }) => {
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
             index === currentIndex ? 'opacity-100' : 'opacity-0'
           }`}
+          style={{
+            opacity: index === currentIndex ? backgroundOpacity : 0
+          }}
           onError={(e) => {
-            console.error('❌ Error cargando imagen de fondo:', imageUrl);
+            // console.error('❌ Error cargando imagen de fondo:', imageUrl);
             // Si la imagen falla, la ocultamos pero no la removemos para mantener el índice
             e.target.style.display = 'none';
           }}
           onLoad={() => {
-            console.log('✅ Imagen de fondo cargada correctamente:', imageUrl);
+            // console.log('✅ Imagen de fondo cargada correctamente:', imageUrl);
           }}
         />
       ))}

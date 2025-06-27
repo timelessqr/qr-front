@@ -3,12 +3,13 @@ import ImageSlider from './ImageSlider';
 
 const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
   const [backgroundImages, setBackgroundImages] = useState([]);
+  
+  // Configuración de opacidad de fondos
+  // 🔧 Para ajustar: 0.0 = invisible, 0.3 = muy sutil, 0.6 = moderado, 0.8 = fuerte, 1.0 = completamente opaco
+  const BACKGROUND_OPACITY = 0.4; // ← CAMBIAR ESTE VALOR PARA AJUSTAR OPACIDAD
 
   // Procesar fondos directamente de memorialData
   useEffect(() => {
-    console.log('🖼️ ProfileHeader - memorialData recibido:', memorialData);
-    console.log('🖼️ ProfileHeader - fondos directos:', memorialData?.fondos);
-    
     if (memorialData?.fondos && Array.isArray(memorialData.fondos) && memorialData.fondos.length > 0) {
       // Extraer URLs de los fondos y mezclar aleatoriamente
       const imageUrls = memorialData.fondos
@@ -18,10 +19,8 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
       // Mezclar aleatoriamente las imágenes para el slideshow
       const shuffledImages = [...imageUrls].sort(() => Math.random() - 0.5);
       
-      console.log('🖼️ ProfileHeader - URLs de fondos procesadas:', shuffledImages);
       setBackgroundImages(shuffledImages);
     } else {
-      console.log('🖼️ ProfileHeader - No se encontraron fondos, usando fallback');
       setBackgroundImages([]);
     }
   }, [memorialData?.fondos]);
@@ -36,12 +35,14 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
   // Determinar qué imágenes usar
   const imagesToDisplay = backgroundImages.length > 0 ? backgroundImages : fallbackImages;
 
-  console.log('🖼️ ProfileHeader - Imágenes a mostrar:', imagesToDisplay);
-
   return (
     <div className="relative w-full h-[450px] md:h-[500px] overflow-hidden rounded-b-lg shadow-lg">
-      {/* ImageSlider con datos reales */}
-      <ImageSlider images={imagesToDisplay} interval={5000} />
+      {/* ImageSlider con datos reales y opacidad configurable */}
+      <ImageSlider 
+        images={imagesToDisplay} 
+        interval={5000}
+        backgroundOpacity={BACKGROUND_OPACITY}
+      />
 
       {/* Gradiente overlay para mejor legibilidad */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent z-5"></div>
@@ -49,7 +50,7 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
       {/* Contenido del header */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-10">
         <div className="relative z-20 mt-24 md:mt-32">
-          {/* Foto de perfil con indicador de fuente */}
+          {/* Foto de perfil */}
           <div className="relative">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 mx-auto">
               {memorialData?.fotoPerfil ? (
@@ -74,13 +75,6 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
                 👤
               </div>
             </div>
-            
-            {/* Badge de fuente de fondos */}
-            {backgroundImages.length > 0 && (
-              <div className="absolute -bottom-2 -right-2 bg-orange-600 text-white text-xs px-2 py-1 rounded-full shadow-lg">
-                {backgroundImages.length} fondos
-              </div>
-            )}
           </div>
         </div>
         
