@@ -16,6 +16,7 @@ import MiniPlayer from '../components/MiniPlayer';
 
 // Importar servicios
 import memorialService from '../services/memorialService';
+import mediaService from '../services/mediaService';
 
 const Memorial = () => {
   const { qrCode } = useParams();
@@ -29,6 +30,8 @@ const Memorial = () => {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [musicTracks, setMusicTracks] = useState([]);
+  const [musicLoading, setMusicLoading] = useState(false);
   const audioRef = useRef(new Audio());
 
   // Cargar datos reales del memorial
@@ -58,6 +61,9 @@ const Memorial = () => {
           if (response.memorial.dashboard) {
             applyDashboardCSS(response.memorial.dashboard);
           }
+          
+          // Cargar música del memorial
+          loadMusicTracks(response.memorial.id);
         } else {
           throw new Error('Memorial no encontrado o inactivo');
         }
@@ -89,6 +95,51 @@ const Memorial = () => {
     };
   }, [qrCode]);
 
+  // Cargar música del memorial
+  const loadMusicTracks = async (profileId) => {
+    try {
+      setMusicLoading(true);
+      
+      const response = await mediaService.getPublicMedia(profileId, 'musica');
+      
+      // Extraer el array de media correctamente
+      const tracksArray = response.data?.media || response.media || [];
+      
+      console.log('🎵 Memorial - Tracks cargados:', tracksArray);
+      
+      // Formatear tracks para el reproductor (solo MP3s)
+      const formattedTracks = tracksArray.map(track => {
+        console.log('🎵 Procesando track MP3:', {
+          id: track.id || track._id,
+          tipo: track.tipo,
+          url: track.url,
+          archivo: track.archivo
+        });
+        
+        return {
+          id: track.id || track._id,
+          title: track.titulo || 'Canción sin título',
+          url: track.url, // URL directa de Cloudinary
+          tipo: track.tipo,
+          description: track.descripcion || '',
+          archivo: track.archivo,
+          dimensiones: track.dimensiones,
+          duracion: track.dimensiones?.duracion,
+          tamaño: track.archivo?.tamaño
+        };
+      });
+      
+      console.log('🎵 Memorial - Tracks formateados:', formattedTracks);
+      setMusicTracks(formattedTracks);
+      
+    } catch (error) {
+      console.error('❌ Error cargando música:', error);
+      setMusicTracks([]);
+    } finally {
+      setMusicLoading(false);
+    }
+  };
+
   const handleMusicButtonClick = () => {
     setShowMusicPlayer(true);
   };
@@ -98,26 +149,70 @@ const Memorial = () => {
   };
 
   const handleSelectSong = (song) => {
+    console.log('🎵 Memorial - Seleccionando canción MP3:', song);
+    console.log('🎵 Memorial - URL disponible:', song.url);
+    console.log('🎵 Memorial - Tipo de URL:', typeof song.url);
+    console.log('🎵 Memorial - URL vacía?:', !song.url);
+    
     setCurrentSong(song);
-    audioRef.current.src = song.url;
-    audioRef.current.play();
-    setIsPlaying(true);
+    
+    // Solo manejar archivos MP3 desde Cloudinary
+    if (song.url) {
+      console.log('✅ Memorial - URL válida, reproduciendo MP3:', song.url);
+      audioRef.current.src = song.url;
+      audioRef.current.play().then(() => {
+        console.log('✅ MP3 iniciado correctamente');
+        setIsPlaying(true);
+      }).catch((error) => {
+        console.error('❌ Error reproduciendo MP3:', error);
+        console.error('❌ Error completo:', {
+          message: error.message,
+          name: error.name,
+          code: error.code
+        });
+        alert('Error al reproducir el archivo de audio: ' + error.message);
+      });
+    } else {
+      console.warn('⚠️ URL de audio faltante');
+      console.log('🔍 Debug objeto song completo:', song);
+      console.log('🔍 Debug keys del objeto:', Object.keys(song));
+      alert('No se puede reproducir este archivo de audio');
+    }
+    
     setShowMusicPlayer(false);
   };
 
   const handleTogglePlay = () => {
+    if (!currentSong) return;
+    
+    console.log('🎵 Memorial - Toggle play MP3:', { isPlaying });
+    
     if (isPlaying) {
       audioRef.current.pause();
+      console.log('⏸️ MP3 pausado');
     } else {
-      audioRef.current.play();
+      audioRef.current.play().then(() => {
+        console.log('▶️ MP3 reanudado');
+      }).catch((error) => {
+        console.error('❌ Error reanudando MP3:', error);
+      });
     }
   };
 
   const handleStopMusic = () => {
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
+    console.log('🚪 Memorial - Deteniendo música MP3:', currentSong);
+    
+    // Limpiar audio MP3
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = '';
+      console.log('⏹️ Audio MP3 detenido y limpiado');
+    }
+    
     setCurrentSong(null);
     setIsPlaying(false);
+    console.log('✅ Música completamente detenida');
   };
 
   const applyDashboardCSS = (dashboard) => {
@@ -217,15 +312,13 @@ const Memorial = () => {
   const memorial = memorialData.memorial;
   const theme = memorial.dashboard?.tema || 'clasico';
 
-  console.log('🎨 Memorial - Renderizando con tema:', theme);
-  console.log('🎭 Memorial - Datos del memorial:', memorial);
-
   return (
     <div className={`min-h-screen flex flex-col memorial theme-${theme}`}>
       {/* Header con fondos dinámicos de Cloudinary */}
       <ProfileHeader 
         memorialData={memorial} 
-        onMusicButtonClick={handleMusicButtonClick} 
+        onMusicButtonClick={handleMusicButtonClick}
+        musicTracks={musicTracks}
       />
       
       {/* Navegación de pestañas */}
@@ -243,11 +336,12 @@ const Memorial = () => {
       <Footer />
 
       {/* Reproductor de música */}
-      {showMusicPlayer && memorial.canciones && (
+      {showMusicPlayer && (
         <MusicPlayer 
-          songs={memorial.canciones || []}
+          songs={musicTracks}
           onClose={handleCloseMusicPlayer}
           onSelectSong={handleSelectSong}
+          loading={musicLoading}
         />
       )}
 

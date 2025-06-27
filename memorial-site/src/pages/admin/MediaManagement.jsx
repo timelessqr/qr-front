@@ -54,7 +54,7 @@ const MediaManagement = () => {
       id: 'musica',
       name: 'Música',
       icon: '🎵',
-      description: 'Enlaces de YouTube'
+      description: 'Archivos de audio'
     }
   ];
 

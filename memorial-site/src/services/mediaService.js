@@ -145,17 +145,6 @@ class MediaService {
 
   // === NUEVOS MÉTODOS PARA FUNCIONALIDADES ESPECÍFICAS ===
 
-  // Agregar track de YouTube
-  async addYouTubeTrack(profileId, trackData) {
-    try {
-      const response = await api.post(`/media/youtube/${profileId}`, trackData);
-      return response.data;
-    } catch (error) {
-      console.error('Error agregando track de YouTube:', error);
-      throw error;
-    }
-  }
-
   // Obtener fondos del memorial
   async getBackgrounds(profileId) {
     try {

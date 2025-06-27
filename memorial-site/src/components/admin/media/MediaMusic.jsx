@@ -1,5 +1,5 @@
 // ====================================
-// src/components/admin/media/MediaMusic.jsx - Gestión de música del recuerdo (YouTube)
+// src/components/admin/media/MediaMusic.jsx - Gestión EXCLUSIVA de archivos MP3
 // ====================================
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaService from '../../../services/mediaService';
@@ -7,12 +7,7 @@ import mediaService from '../../../services/mediaService';
 const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
   const [musicTracks, setMusicTracks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [newTrack, setNewTrack] = useState({
-    youtubeUrl: '',
-    titulo: '',
-    descripcion: ''
-  });
+  const [uploading, setUploading] = useState(false);
   const [playingTrack, setPlayingTrack] = useState(null);
 
   const profileId = selectedMemorial?._id;
@@ -39,7 +34,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
       setMusicTracks(Array.isArray(tracksArray) ? tracksArray : []);
     } catch (error) {
       console.error('❌ Error cargando música:', error);
-      setMusicTracks([]); // Asegurar que sea array vacío en caso de error
+      setMusicTracks([]);
     } finally {
       setLoading(false);
     }
@@ -60,69 +55,69 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
         totalMusica
       });
     }
-  }, [musicTracks]); // ← REMOVER onStatsUpdate de las dependencias
+  }, [musicTracks]);
 
   useEffect(() => {
-    if (musicTracks.length >= 0) { // Solo cuando musicTracks esté cargado (incluye array vacío)
+    if (musicTracks.length >= 0) {
       updateStats();
     }
-  }, [musicTracks.length]); // Solo depende de la longitud
+  }, [musicTracks.length]);
 
-  // Extraer ID de video de YouTube de diferentes formatos de URL
-  const extractYouTubeId = (url) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
+  const handleMp3Upload = async (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-  // Validar URL de YouTube
-  const validateYouTubeUrl = (url) => {
-    return extractYouTubeId(url) !== null;
-  };
-
-  // Obtener información del video de YouTube (simulado - en producción usarías la API de YouTube)
-  const getYouTubeInfo = async (videoId) => {
-    // En producción, aquí harías una llamada a la API de YouTube
-    // Por ahora simulamos la respuesta
-    return {
-      title: `Video de YouTube ${videoId}`,
-      thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-      duration: '3:45'
-    };
-  };
-
-  const handleAddTrack = async () => {
-    if (!newTrack.youtubeUrl.trim()) return;
-
-    if (!validateYouTubeUrl(newTrack.youtubeUrl)) {
-      alert('Por favor ingresa una URL válida de YouTube');
-      return;
-    }
+    console.log('🎵 Archivos seleccionados:', files);
 
     try {
-      setAdding(true);
-      
-      const videoId = extractYouTubeId(newTrack.youtubeUrl);
-      const videoInfo = await getYouTubeInfo(videoId);
+      setUploading(true);
 
-      const trackData = {
-        url: newTrack.youtubeUrl,
-        videoId: videoId,
-        titulo: newTrack.titulo || videoInfo.title,
-        descripcion: newTrack.descripcion || 'Música del recuerdo'
-      };
-
-      const response = await mediaService.addYouTubeTrack(profileId, trackData);
-
-      if (response.success) {
-        await loadMusicTracks();
-        setNewTrack({ youtubeUrl: '', titulo: '', descripcion: '' });
+      // Validar archivos
+      const validFiles = [];
+      for (let file of files) {
+        if (!file.type.startsWith('audio/')) {
+          alert(`${file.name} no es un archivo de audio válido`);
+          continue;
+        }
+        if (file.size > 20 * 1024 * 1024) { // 20MB
+          alert(`${file.name} excede el tamaño máximo de 20MB`);
+          continue;
+        }
+        validFiles.push(file);
       }
+
+      if (validFiles.length === 0) {
+        alert('No hay archivos válidos para subir');
+        return;
+      }
+
+      // Crear FormData usando la ruta estándar
+      const formData = new FormData();
+      validFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('seccion', 'musica');
+      formData.append('descripcion', 'Música del recuerdo');
+
+      console.log('🎵 Subiendo archivos MP3 usando ruta estándar...');
+
+      // Usar el servicio estándar de upload
+      const result = await mediaService.uploadFiles(profileId, formData);
+
+      if (result.success) {
+        console.log('✅ Upload exitoso:', result);
+        await loadMusicTracks(); // Recargar lista
+        // Limpiar input
+        event.target.value = '';
+      } else {
+        throw new Error(result.mensaje || 'Error subiendo archivos');
+      }
+
     } catch (error) {
-      console.error('Error agregando música:', error);
-      alert('Error al agregar la canción. Por favor, inténtalo de nuevo.');
+      console.error('❌ Error subiendo MP3s:', error);
+      alert('Error al subir los archivos: ' + error.message);
     } finally {
-      setAdding(false);
+      setUploading(false);
     }
   };
 
@@ -145,6 +140,21 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return 'N/A';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -154,7 +164,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
             Música del Recuerdo
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Agrega canciones de YouTube que se reproducirán en el memorial
+            Sube archivos MP3 que se reproducirán en el memorial
           </p>
         </div>
         
@@ -165,74 +175,47 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
         </div>
       </div>
 
-      {/* Formulario para agregar nueva canción */}
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h4 className="font-medium text-red-900 mb-4 flex items-center">
+      {/* Zona de carga de archivos MP3 */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+        <h4 className="font-medium text-green-900 mb-4 flex items-center">
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
           </svg>
-          Agregar Nueva Canción
+          Subir Archivos MP3
         </h4>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL de YouTube *
-            </label>
-            <div className="flex space-x-2">
-              <input
-                type="url"
-                value={newTrack.youtubeUrl}
-                onChange={(e) => setNewTrack(prev => ({ ...prev, youtubeUrl: e.target.value }))}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              />
-              <button
-                onClick={handleAddTrack}
-                disabled={adding || !newTrack.youtubeUrl.trim()}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {adding ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Agregar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Título personalizado (opcional)
+        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-green-300 border-dashed rounded-md hover:border-green-400 transition-colors">
+          <div className="space-y-1 text-center">
+            <svg className="mx-auto h-12 w-12 text-green-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <div className="flex text-sm text-gray-600">
+              <label htmlFor="mp3-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                <span>Seleccionar archivos MP3</span>
+                <input
+                  id="mp3-upload"
+                  type="file"
+                  multiple
+                  accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                  onChange={handleMp3Upload}
+                  disabled={uploading}
+                  className="sr-only"
+                />
               </label>
-              <input
-                type="text"
-                value={newTrack.titulo}
-                onChange={(e) => setNewTrack(prev => ({ ...prev, titulo: e.target.value }))}
-                placeholder="Se extraerá automáticamente de YouTube"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              />
+              <p className="pl-1">o arrastra y suelta</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descripción (opcional)
-              </label>
-              <input
-                type="text"
-                value={newTrack.descripcion}
-                onChange={(e) => setNewTrack(prev => ({ ...prev, descripcion: e.target.value }))}
-                placeholder="Ej: Su canción favorita"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
+            <p className="text-xs text-gray-500">
+              MP3, WAV, OGG, M4A hasta 20MB cada uno
+            </p>
           </div>
         </div>
+        
+        {uploading && (
+          <div className="mt-4 flex items-center justify-center text-sm text-green-600">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
+            Subiendo archivos a Cloudinary...
+          </div>
+        )}
 
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
           <div className="flex items-start">
@@ -240,11 +223,12 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div className="text-sm text-blue-700">
-              <p className="font-medium mb-1">Formatos de URL soportados:</p>
+              <p className="font-medium mb-1">Formatos soportados:</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>https://www.youtube.com/watch?v=VIDEO_ID</li>
-                <li>https://youtu.be/VIDEO_ID</li>
-                <li>https://www.youtube.com/embed/VIDEO_ID</li>
+                <li>MP3 (recomendado)</li>
+                <li>WAV (alta calidad)</li>
+                <li>OGG (código abierto)</li>
+                <li>M4A (Apple)</li>
               </ul>
             </div>
           </div>
@@ -254,7 +238,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
       {/* Lista de canciones */}
       {loading ? (
         <div className="flex justify-center items-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
         </div>
       ) : musicTracks.length > 0 ? (
         <div className="space-y-4">
@@ -266,21 +250,11 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
             {musicTracks.map((track, index) => (
               <div key={track._id} className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                 <div className="flex items-center p-4">
-                  {/* Thumbnail */}
-                  <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden mr-4">
-                    {track.metadata?.thumbnail ? (
-                      <img
-                        src={track.metadata.thumbnail}
-                        alt="Thumbnail"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                        </svg>
-                      </div>
-                    )}
+                  {/* Icono de música */}
+                  <div className="flex-shrink-0 w-16 h-16 bg-green-100 rounded-lg overflow-hidden mr-4 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
                   </div>
 
                   {/* Información de la canción */}
@@ -294,15 +268,25 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                           {track.descripcion || 'Música del recuerdo'}
                         </p>
                         <div className="flex items-center mt-1 space-x-4">
-                          <span className="inline-flex items-center text-xs text-gray-400">
+                          <span className="inline-flex items-center text-xs text-green-600">
                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                             </svg>
-                            YouTube
+                            Archivo MP3
                           </span>
                           <span className="text-xs text-gray-400">
                             Orden: {index + 1}
                           </span>
+                          {track.archivo?.tamaño && (
+                            <span className="text-xs text-gray-400">
+                              {formatFileSize(track.archivo.tamaño)}
+                            </span>
+                          )}
+                          {track.dimensiones?.duracion && (
+                            <span className="text-xs text-gray-400">
+                              {formatDuration(track.dimensiones.duracion)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -312,7 +296,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                   <div className="flex items-center space-x-2 ml-4">
                     <button
                       onClick={() => handlePlayPreview(track)}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      className="p-2 text-gray-400 hover:text-green-600 transition-colors"
                       title="Vista previa"
                     >
                       {playingTrack === track._id ? (
@@ -326,15 +310,6 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                       )}
                     </button>
                     <button
-                      onClick={() => window.open(track.archivo?.url || `https://www.youtube.com/watch?v=${track.metadata?.videoId}`, '_blank')}
-                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                      title="Abrir en YouTube"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
-                    <button
                       onClick={() => handleDelete(track._id)}
                       className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                       title="Eliminar"
@@ -346,20 +321,21 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
                   </div>
                 </div>
 
-                {/* Player embed si está siendo reproducido */}
-                {playingTrack === track._id && track.metadata?.videoId && (
+                {/* Player de vista previa */}
+                {playingTrack === track._id && track.archivo?.url && (
                   <div className="border-t bg-gray-50 p-4">
-                    <div className="aspect-video max-w-md mx-auto">
-                      <iframe
-                        width="100%"
-                        height="100%"
-                        src={`https://www.youtube.com/embed/${track.metadata.videoId}?autoplay=1`}
-                        title={track.titulo}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="rounded-lg"
-                      ></iframe>
+                    <div className="max-w-md mx-auto bg-white rounded-lg p-4">
+                      <audio
+                        controls
+                        src={track.archivo.url}
+                        className="w-full"
+                        autoPlay
+                      >
+                        Tu navegador no soporta la reproducción de audio.
+                      </audio>
+                      <p className="text-xs text-gray-500 mt-2 text-center">
+                        {track.archivo.nombreOriginal}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -369,8 +345,8 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
           </div>
@@ -378,7 +354,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
             Sin música configurada
           </h3>
           <p className="text-gray-500">
-            Agrega canciones de YouTube para crear la banda sonora del memorial
+            Sube archivos MP3 para crear la banda sonora del memorial
           </p>
         </div>
       )}

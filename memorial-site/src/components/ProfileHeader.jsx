@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ImageSlider from './ImageSlider';
 
-const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
+const ProfileHeader = ({ memorialData, onMusicButtonClick, musicTracks = [] }) => {
   const [backgroundImages, setBackgroundImages] = useState([]);
   
   // Configuración de opacidad de fondos
@@ -103,18 +103,18 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick }) => {
             </div>
           </div>
           
-          {/* Botón de música */}
-          {memorialData?.canciones && memorialData.canciones.length > 0 && (
+          {/* Botón de música - REVERTIDO AL ORIGINAL */}
+          {musicTracks && musicTracks.length > 0 && (
             <button 
               onClick={onMusicButtonClick}
-              className="mt-6 inline-flex items-center justify-center bg-stone-700/80 backdrop-blur-sm hover:bg-stone-800/80 text-white py-2 px-6 rounded-full shadow-lg transition duration-300 z-50 border border-white/20"
+              className="mt-6 inline-flex items-center justify-center bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white/90 py-2 px-5 rounded-full shadow-lg transition-all duration-300 z-50 border border-white/10 hover:border-white/20"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                 <path d="M9 18V5l12-2v13"></path>
                 <circle cx="6" cy="18" r="3"></circle>
                 <circle cx="18" cy="16" r="3"></circle>
               </svg>
-              Música del Recuerdo
+              Su Música ({musicTracks.length})
             </button>
           )}
 
