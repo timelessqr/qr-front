@@ -3,10 +3,30 @@ import React, { useState, useEffect } from "react";
 const Contenido = ({ memorialData }) => {
   const [tipoContenido, setTipoContenido] = useState("fotos"); // Estado para tipo de contenido
   
-  // Obtener fotos y videos reales del memorial
-  const fotosRecuerdos = memorialData?.galeria?.filter(item => 
-    item.tipo === 'foto' || item.tipo === 'imagen'
-  ) || [];
+  // Debug: Ver qué datos estamos recibiendo
+  console.log('🖼️ Contenido - memorialData completo:', memorialData);
+  console.log('🖼️ Contenido - galeria array:', memorialData?.galeria);
+  console.log('🖼️ Contenido - videos array:', memorialData?.videos);
+  console.log('🖼️ Contenido - fondos array:', memorialData?.fondos);
+  
+  // Obtener fotos reales del memorial (ahora ya vienen filtradas por sección galeria)
+  const fotosRecuerdos = memorialData?.galeria?.filter(item => {
+    const esFoto = (item.tipo === 'foto' || item.tipo === 'imagen');
+    
+    // Debug para ver qué está pasando
+    if (esFoto) {
+      console.log('🖼️ Contenido - Foto en galeria:', {
+        titulo: item.titulo,
+        tipo: item.tipo,
+        seccion: item.seccion,
+        esValidaParaGaleria: esFoto
+      });
+    }
+    
+    return esFoto;
+  }) || [];
+  
+  console.log('🖼️ Contenido - Total fotos en galeria:', fotosRecuerdos.length);
   
   const videosRecuerdos = memorialData?.videos?.filter(item => 
     item.tipo === 'video'

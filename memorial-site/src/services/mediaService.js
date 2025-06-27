@@ -34,10 +34,17 @@ class MediaService {
       if (filters.seccion) params.append('seccion', filters.seccion);
       if (filters.estado) params.append('estado', filters.estado);
 
-      const response = await api.get(`/media/profile/${profileId}?${params.toString()}`);
+      const url = `/media/profile/${profileId}?${params.toString()}`;
+      console.log('🔍 MediaService - URL completa:', url);
+      console.log('🔍 MediaService - Filtros enviados:', filters);
+      
+      const response = await api.get(url);
+      console.log('🔍 MediaService - Respuesta del servidor:', response.data);
+      
       return response.data;
     } catch (error) {
-      console.error('Error obteniendo media del perfil:', error);
+      console.error('❌ MediaService - Error obteniendo media del perfil:', error);
+      console.error('❌ MediaService - URL que falló:', `/media/profile/${profileId}?${new URLSearchParams(filters).toString()}`);
       throw error;
     }
   }
