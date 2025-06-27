@@ -90,33 +90,34 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick, musicTracks = [] }) =
             }"
           </p>
           
-          {/* Ubicación */}
+          {/* Ubicación y Música */}
           <div className="flex items-center justify-center mt-4">
             <div className="flex items-center bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white">
               <span className="text-lg mr-2">🇨🇱</span>
-              <p className="text-white">
+              <p className="text-white mr-3">
                 {memorialData?.ubicacion?.ciudad && memorialData?.ubicacion?.pais
                   ? `${memorialData.ubicacion.ciudad}, ${memorialData.ubicacion.pais}`
                   : 'Santiago, Chile'
                 }
               </p>
+              
+              {/* Ícono de música discreto */}
+              {musicTracks && musicTracks.length > 0 && (
+                <button 
+                  onClick={onMusicButtonClick}
+                  className="ml-2 p-1 hover:bg-white/10 rounded-full transition-all duration-300 group"
+                  title={`Su Música (${musicTracks.length} cancion${musicTracks.length !== 1 ? 'es' : ''})`}
+                >
+                  <svg className="w-4 h-4 text-white/80 group-hover:text-white group-hover:scale-110 transition-all duration-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
-          
-          {/* Botón de música - REVERTIDO AL ORIGINAL */}
-          {musicTracks && musicTracks.length > 0 && (
-            <button 
-              onClick={onMusicButtonClick}
-              className="mt-6 inline-flex items-center justify-center bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white/90 py-2 px-5 rounded-full shadow-lg transition-all duration-300 z-50 border border-white/10 hover:border-white/20"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-              Su Música ({musicTracks.length})
-            </button>
-          )}
+
 
           {/* Información de fondos en modo debug (solo en desarrollo) */}
           {process.env.NODE_ENV === 'development' && false && ( // Deshabilitado temporalmente
