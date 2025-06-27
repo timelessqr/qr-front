@@ -1,5 +1,5 @@
 // ====================================
-// src/components/admin/media/MediaMusic.jsx - Gestión EXCLUSIVA de archivos MP3
+// src/components/admin/media/MediaMusic.jsx - Gestión de archivos MP3
 // ====================================
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaService from '../../../services/mediaService';
@@ -213,7 +213,7 @@ const MediaMusic = ({ selectedMemorial, onStatsUpdate }) => {
         {uploading && (
           <div className="mt-4 flex items-center justify-center text-sm text-green-600">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
-            Subiendo archivos a Cloudinary...
+            Subiendo archivos de audio...
           </div>
         )}
 

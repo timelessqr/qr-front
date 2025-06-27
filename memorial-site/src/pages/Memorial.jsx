@@ -1,5 +1,5 @@
 // ====================================
-// src/pages/Memorial.jsx - Página pública del memorial (con datos reales de Cloudinary)
+// src/pages/Memorial.jsx - Página pública del memorial
 // ====================================
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -119,7 +119,7 @@ const Memorial = () => {
         return {
           id: track.id || track._id,
           title: track.titulo || 'Canción sin título',
-          url: track.url, // URL directa de Cloudinary
+          url: track.url, // URL directa del archivo
           tipo: track.tipo,
           description: track.descripcion || '',
           archivo: track.archivo,
@@ -156,7 +156,7 @@ const Memorial = () => {
     
     setCurrentSong(song);
     
-    // Solo manejar archivos MP3 desde Cloudinary
+    // Solo manejar archivos MP3
     if (song.url) {
       console.log('✅ Memorial - URL válida, reproduciendo MP3:', song.url);
       audioRef.current.src = song.url;
@@ -265,7 +265,7 @@ const Memorial = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Cargando memorial...</p>
-          <p className="text-gray-400 text-sm mt-2">Obteniendo datos desde Cloudinary</p>
+          <p className="text-gray-400 text-sm mt-2">Obteniendo datos del servidor</p>
         </div>
       </div>
     );
@@ -314,7 +314,7 @@ const Memorial = () => {
 
   return (
     <div className={`min-h-screen flex flex-col memorial theme-${theme}`}>
-      {/* Header con fondos dinámicos de Cloudinary */}
+      {/* Header con fondos dinámicos */}
       <ProfileHeader 
         memorialData={memorial} 
         onMusicButtonClick={handleMusicButtonClick}
@@ -361,7 +361,7 @@ const Memorial = () => {
           <p><strong>Memorial ID:</strong> {memorial._id}</p>
           <p><strong>QR Code:</strong> {qrCode}</p>
           <p><strong>Tema:</strong> {theme}</p>
-          <p><strong>Fondos:</strong> Dinámicos desde Cloudinary</p>
+          <p><strong>Fondos:</strong> Dinámicos</p>
         </div>
       )}
     </div>

@@ -118,7 +118,7 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                                 </svg>
                                 <div className="text-xs text-green-700">
                                     <p className="font-medium mb-1">Archivos de Audio MP3</p>
-                                    <p>Los archivos se reproducen directamente desde Cloudinary con controles completos de reproducción.</p>
+                                    <p>Los archivos se reproducen con controles completos de reproducción.</p>
                                 </div>
                             </div>
                         </div>
