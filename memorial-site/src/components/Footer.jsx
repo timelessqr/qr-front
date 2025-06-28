@@ -18,13 +18,15 @@ const Footer = () => {
             <a href="#" className="text-gray-400 hover:text-black transition duration-300">Contacto</a>
           </div>
         </div>
-              {/* Copyright - Centrado en móvil, justificado en escritorio */}
-            <div className="flex flex-col md:flex-row justify-center md:justify-between items-center">
-              <p className="text-xs md:text-sm text-gray-800 mb-2 md:mb-0 text-center md:text-left">
-                &copy; {new Date().getFullYear()} Lazos de Vida. Todos los derechos reservados.
-              </p>
-             
-            </div>
+        {/* Copyright - Centrado en móvil, justificado en escritorio */}
+        <div className="text-center md:text-left mb-2 md:mb-0">
+          <p className="text-xs md:text-sm text-gray-800">
+            &copy; {new Date().getFullYear()} Lazos de Vida. Todos los derechos reservados.
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Diseñado por <a href="https://bitsdeve.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">bitsdeve 🤖</a>
+          </p>
+        </div>
       </div>
     </footer>
   );
