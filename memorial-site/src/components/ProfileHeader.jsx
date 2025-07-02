@@ -80,14 +80,14 @@ const ProfileHeader = ({ memorialData, onMusicButtonClick, musicTracks = [] }) =
         
         {/* Información del memorial */}
         <div className="px-6 text-center w-full mt-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+          <h1 className="font-memorial text-3xl md:text-4xl font-bold text-white drop-shadow-lg tracking-wide">
             {memorialData?.nombre || 'Nombre no disponible'} {memorialData?.apellidos || ''}
           </h1>
-          <p className="text-gray-200 mt-2 italic font-light text-lg md:text-xl drop-shadow-md">
-            "{
+          <p className="font-memorial text-gray-200 mt-3 italic font-light text-lg md:text-xl drop-shadow-md leading-relaxed">
+            “{
               memorialData?.frase ||
               'El amor y los recuerdos nos mantienen vivos más allá del tiempo.'
-            }"
+            }”
           </p>
           
           {/* Ubicación y Música */}

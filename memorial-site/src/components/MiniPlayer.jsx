@@ -23,14 +23,14 @@ const MiniPlayer = ({ song, onStop, onTogglePlay, isPlaying }) => {
 
             {/* Información de la canción */}
             <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-stone-700 truncate">
+                <p className="font-memorial text-xs sm:text-sm font-medium text-stone-700 truncate">
                     {song.title || song.titulo || song.archivo?.nombreOriginal || 'Canción sin título'}
                 </p>
                 <div className="flex items-center space-x-1 sm:space-x-2">
-                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                    <span className="font-memorial text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                         MP3
                     </span>
-                    <span className="text-xs text-stone-500">
+                    <span className="font-memorial text-xs text-stone-500">
                         {isPlaying ? 'Reproduciendo' : 'Pausado'}
                     </span>
                 </div>
