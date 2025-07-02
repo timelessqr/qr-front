@@ -32,7 +32,10 @@ const AdminLayout = () => {
             onClick={() => setSidebarOpen(false)} 
           />
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar 
+              onClose={() => setSidebarOpen(false)} 
+              onLogout={handleLogout} 
+            />
           </div>
         </div>
       )}
@@ -40,7 +43,9 @@ const AdminLayout = () => {
       {/* Sidebar para desktop - Fijo a la izquierda */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <div className="flex flex-col w-64 border-r border-gray-200">
-          <Sidebar />
+          <Sidebar 
+            onLogout={handleLogout} 
+          />
         </div>
       </div>
 
@@ -48,9 +53,7 @@ const AdminLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header - Altura fija y compacta */}
         <Header 
-          user={user}
           onMenuClick={() => setSidebarOpen(true)}
-          onLogout={handleLogout}
         />
 
         {/* Contenido principal - Scrolleable */}
