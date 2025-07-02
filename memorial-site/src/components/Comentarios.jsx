@@ -368,7 +368,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
   return (
     <div className="animate-fadeIn">
       <div className="bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center pt-4">Mensajes de condolencia</h2>
+        <h2 className="font-memorial text-2xl font-semibold text-gray-800 mb-6 text-center pt-4">Mensajes de condolencia</h2>
         
         {/* Indicador del nivel de usuario */}
         {acceso.tieneAcceso && (
@@ -406,7 +406,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
             <div className="text-center mb-6">
               <button
                 onClick={() => setMostrarValidacion(true)}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
+                className="font-memorial bg-slate-600 hover:bg-slate-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
               >
                 🔐 Ingresar código de acceso
               </button>
@@ -416,8 +416,8 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
           {/* 🔧 SIMPLIFICADO: Formulario de validación */}
           {mostrarValidacion && (
             <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 mb-4">
-              <h3 className="text-gray-800 font-medium mb-3">🔐 Código de Acceso</h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <h3 className="font-memorial text-gray-800 font-medium mb-3">🔐 Código de Acceso</h3>
+              <p className="font-memorial text-gray-600 text-sm mb-4">
                 Para dejar comentarios necesitas el código proporcionado por la familia.
               </p>
               
@@ -436,7 +436,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                   <button
                     type="submit"
                     disabled={validandoCodigo || !codigoFamiliar.trim()}
-                    className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
+                    className="font-memorial bg-slate-600 hover:bg-slate-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-300"
                   >
                     {validandoCodigo ? 'Validando...' : 'Validar'}
                   </button>
@@ -448,7 +448,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
           {/* Formulario principal */}
           {(acceso.tieneAcceso || !configuracion.requiereCodigo) && (
             <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
-              <h3 className="text-gray-800 font-medium mb-3">Comparte tu mensaje</h3>
+              <h3 className="font-memorial text-gray-800 font-medium mb-3">Comparte tu mensaje</h3>
               <form onSubmit={agregarComentario}>
                 <input
                   type="text"
@@ -652,8 +652,8 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.477 8-10 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.477-8 10-8s10 3.582 10 8z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aún no hay comentarios</h3>
-                <p className="text-gray-600">Sé el primero en dejar un mensaje de condolencia.</p>
+                <h3 className="font-memorial text-lg font-medium text-gray-900 mb-2">Aún no hay comentarios</h3>
+                <p className="font-memorial text-gray-600">Sé el primero en dejar un mensaje de condolencia.</p>
               </div>
             )}
             
@@ -663,7 +663,7 @@ const Comentarios = ({ qrCode, comentarios: comentariosIniciales = [], configura
                 <button 
                   onClick={cargarMasComentarios}
                   disabled={loadingComentarios}
-                  className="bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 font-medium py-2 px-6 rounded-md transition duration-300 inline-flex items-center"
+                  className="font-memorial bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 font-medium py-2 px-6 rounded-md transition duration-300 inline-flex items-center"
                 >
                   {loadingComentarios ? (
                     <>

@@ -41,7 +41,7 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
                 <div className="p-4 flex items-center justify-between border-b border-stone-200">
-                    <h3 className="font-bold text-stone-700">Su Música</h3>
+                    <h3 className="font-memorial font-bold text-stone-700">Su Música</h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-stone-200">
                         <icons.close className="w-5 h-5 text-stone-600"/>
                     </button>
@@ -51,7 +51,7 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                     {loading ? (
                         <div className="flex items-center justify-center h-32">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                            <span className="ml-3 text-stone-600">Cargando música...</span>
+                            <span className="font-memorial ml-3 text-stone-600">Cargando música...</span>
                         </div>
                     ) : songs.length > 0 ? (
                         <ul className="space-y-2">
@@ -71,25 +71,25 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                                             </div>
                                             
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-stone-700 truncate">
-                                                    {song.title || song.titulo || song.archivo?.nombreOriginal || 'Canción sin título'}
-                                                </p>
-                                                <div className="flex items-center space-x-2 mt-1">
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                                                        MP3
-                                                    </span>
-                                                    {duration && (
-                                                        <span className="text-xs text-stone-500">{duration}</span>
-                                                    )}
-                                                    {fileSize && (
-                                                        <span className="text-xs text-stone-500">{fileSize}</span>
-                                                    )}
-                                                </div>
-                                                {song.description || song.descripcion ? (
-                                                    <p className="text-xs text-stone-500 truncate mt-1">
-                                                        {song.description || song.descripcion}
-                                                    </p>
-                                                ) : null}
+                                            <p className="font-memorial text-sm font-medium text-stone-700 truncate">
+                                            {song.title || song.titulo || song.archivo?.nombreOriginal || 'Canción sin título'}
+                                            </p>
+                                            <div className="flex items-center space-x-2 mt-1">
+                                            <span className="font-memorial text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                            MP3
+                                            </span>
+                                            {duration && (
+                                            <span className="font-memorial text-xs text-stone-500">{duration}</span>
+                                            )}
+                                            {fileSize && (
+                                            <span className="font-memorial text-xs text-stone-500">{fileSize}</span>
+                                            )}
+                                            </div>
+                                            {song.description || song.descripcion ? (
+                                            <p className="font-memorial text-xs text-stone-500 truncate mt-1">
+                                            {song.description || song.descripcion}
+                                            </p>
+                                            ) : null}
                                             </div>
                                         </div>
                                         <div className="p-2 rounded-full bg-stone-200/50 group-hover:bg-green-500 text-stone-600 group-hover:text-white transition-colors flex-shrink-0">
@@ -104,8 +104,8 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                             <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center mb-3">
                                 <icons.music className="w-6 h-6 text-stone-400" />
                             </div>
-                            <p className="text-stone-600 font-medium">Sin música disponible</p>
-                            <p className="text-stone-500 text-sm">Aún no se han agregado canciones</p>
+                            <p className="font-memorial text-stone-600 font-medium">Sin música disponible</p>
+                            <p className="font-memorial text-stone-500 text-sm">Aún no se han agregado canciones</p>
                         </div>
                     )}
                     
@@ -117,8 +117,8 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <div className="text-xs text-green-700">
-                                    <p className="font-medium mb-1">Archivos de Audio MP3</p>
-                                    <p>Los archivos se reproducen con controles completos de reproducción.</p>
+                                    <p className="font-memorial font-medium mb-1">Archivos de Audio MP3</p>
+                                    <p className="font-memorial">Los archivos se reproducen con controles completos de reproducción.</p>
                                 </div>
                             </div>
                         </div>

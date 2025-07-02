@@ -186,16 +186,16 @@ const Contenido = ({ memorialData }) => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center pt-4">
-          Galería de recuerdos
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
+        <h2 className="font-memorial text-memorial-subtitle sm:text-memorial-title text-gray-800 mb-4 sm:mb-6 text-center pt-6 font-semibold tracking-wide">
+          Galería de Recuerdos
         </h2>
 
         {/* Navegación horizontal - SOLO fotos y videos */}
-        <div className="flex px-6 overflow-x-auto border-b mb-6">
+        <div className="flex px-3 sm:px-6 overflow-x-auto border-b mb-4 sm:mb-6">
           <button 
             onClick={() => cambiarTipoContenido("fotos")}
-            className={`px-4 py-2 font-medium focus:outline-none mr-4 border-b-2 transition-colors duration-200 ${
+            className={`font-memorial px-3 sm:px-4 py-2 font-medium focus:outline-none mr-2 sm:mr-4 border-b-2 transition-colors duration-200 whitespace-nowrap text-sm sm:text-base ${
               tipoContenido === "fotos" 
                 ? "text-red-600 border-red-500" 
                 : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
@@ -205,7 +205,7 @@ const Contenido = ({ memorialData }) => {
           </button>
           <button 
             onClick={() => cambiarTipoContenido("videos")}
-            className={`px-4 py-2 font-medium focus:outline-none border-b-2 transition-colors duration-200 ${
+            className={`font-memorial px-3 sm:px-4 py-2 font-medium focus:outline-none border-b-2 transition-colors duration-200 whitespace-nowrap text-sm sm:text-base ${
               tipoContenido === "videos" 
                 ? "text-red-600 border-red-500" 
                 : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
@@ -216,11 +216,11 @@ const Contenido = ({ memorialData }) => {
         </div>
 
         {/* Contenido dinámico según el tipo seleccionado */}
-        <div className="px-6 pb-8">
+        <div className="px-3 sm:px-6 pb-6 sm:pb-8">
           {tipoContenido === "fotos" ? (
             // Cuadrícula de fotos
             <div
-              className={`grid grid-cols-2 md:grid-cols-4 gap-4 transition-opacity duration-300 ${
+              className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 transition-opacity duration-300 ${
                 fade ? "opacity-100" : "opacity-0"
               }`}
             >
@@ -233,13 +233,13 @@ const Contenido = ({ memorialData }) => {
                   <img
                     src={foto.url || foto.archivo?.url}
                     alt={foto.titulo || `Recuerdo ${(paginaActual - 1) * itemsPorPagina + i + 1}`}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-32 sm:h-40 md:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
                       // Si falla la imagen, mostrar emoji
                       e.target.style.display = 'none';
                       if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
                         const emojiDiv = document.createElement('div');
-                        emojiDiv.className = 'emoji-fallback w-full h-48 flex items-center justify-center text-4xl bg-gray-100';
+                        emojiDiv.className = 'emoji-fallback w-full h-32 sm:h-40 md:h-48 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl bg-gray-100';
                         emojiDiv.textContent = '📸';
                         e.target.parentNode.appendChild(emojiDiv);
                       }
@@ -294,12 +294,12 @@ const Contenido = ({ memorialData }) => {
 
           {/* Paginación horizontal */}
           {totalPaginas > 1 && (
-            <div className="flex justify-center mt-8">
-              <nav className="inline-flex rounded-md shadow">
+            <div className="flex justify-center mt-6 sm:mt-8">
+              <nav className="inline-flex rounded-md shadow text-sm">
                 <button
                   onClick={() => cambiarPagina(paginaActual - 1)}
                   disabled={paginaActual === 1}
-                  className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
+                  className="font-memorial px-2 sm:px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200 text-xs sm:text-sm"
                 >
                   Anterior
                 </button>
@@ -307,7 +307,7 @@ const Contenido = ({ memorialData }) => {
                   <button
                     key={idx}
                     onClick={() => cambiarPagina(idx + 1)}
-                    className={`px-3 py-2 border-t border-b border-gray-300 bg-white transition-colors duration-200 ${
+                    className={`font-memorial px-2 sm:px-3 py-2 border-t border-b border-gray-300 bg-white transition-colors duration-200 text-xs sm:text-sm ${
                       paginaActual === idx + 1
                         ? "text-gray-700 font-medium bg-gray-50"
                         : "text-gray-500 hover:bg-gray-50"
@@ -319,7 +319,7 @@ const Contenido = ({ memorialData }) => {
                 <button
                   onClick={() => cambiarPagina(paginaActual + 1)}
                   disabled={paginaActual === totalPaginas}
-                  className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
+                  className="font-memorial px-2 sm:px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200 text-xs sm:text-sm"
                 >
                   Siguiente
                 </button>
@@ -334,10 +334,10 @@ const Contenido = ({ memorialData }) => {
             <div className="text-6xl mb-4">
               {tipoContenido === "fotos" ? "📸" : "🎥"}
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="font-memorial text-lg font-medium text-gray-900 mb-2">
               No hay {tipoContenido} disponibles
             </h3>
-            <p className="text-gray-600">
+            <p className="font-memorial text-gray-600 leading-relaxed">
               Los {tipoContenido} aparecerán aquí cuando se agreguen al memorial.
             </p>
           </div>

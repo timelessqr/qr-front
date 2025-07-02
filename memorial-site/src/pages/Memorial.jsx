@@ -116,9 +116,16 @@ const Memorial = () => {
           archivo: track.archivo
         });
         
+        // Extraer título con múltiples fallbacks
+        let titulo = track.titulo;
+        if (!titulo && track.archivo?.nombreOriginal) {
+          // Si no hay título, usar el nombre del archivo sin extensión
+          titulo = track.archivo.nombreOriginal.replace(/\.[^/.]+$/, "");
+        }
+        
         return {
           id: track.id || track._id,
-          title: track.titulo || 'Canción sin título',
+          title: titulo || 'Canción sin título',
           url: track.url, // URL directa del archivo
           tipo: track.tipo,
           description: track.descripcion || '',
@@ -329,7 +336,7 @@ const Memorial = () => {
       />
       
       {/* Contenido dinámico según la pestaña seleccionada */}
-      <div className="flex-grow container mx-auto px-4 py-8">
+      <div className="flex-grow container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {renderTabContent()}
       </div>
       

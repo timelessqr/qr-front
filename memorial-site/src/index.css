@@ -19,3 +19,58 @@
     transform: translateY(0);
   }
 }
+
+/* Optimizaciones para móvil */
+@layer base {
+  /* Mejorar el toque en dispositivos móviles */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Optimización de viewport para móvil */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  
+  /* Mejorar el scroll en iOS */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Optimización de fuentes para pantallas pequeñas */
+  @media (max-width: 640px) {
+    body {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+  
+  /* Aplicar font-memorial por defecto al body para mejor herencia */
+  body {
+    font-family: 'Lora', Georgia, serif;
+  }
+}
+
+/* Utilidades adicionales para memorial */
+@layer utilities {
+  /* Mejor renderizado de texto */
+  .text-rendering-optimized {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Sombras de texto suaves */
+  .text-shadow-soft {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Gradientes de texto elegantes */
+  .text-gradient-memorial {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
