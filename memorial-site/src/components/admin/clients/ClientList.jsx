@@ -1,10 +1,10 @@
 // ====================================
 // src/components/admin/clients/ClientList.jsx - Lista de clientes
 // ====================================
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '../../../hooks';
-import { memorialService } from '../../../services'; // 🔧 NUEVO: Para verificar memoriales existentes
+import ClientSearch from '../search/ClientSearch'; // ✅ Búsqueda simple
 
 const ClientList = () => {
   const navigate = useNavigate();
@@ -28,56 +28,14 @@ const ClientList = () => {
     }
   }, [clients]);
   
-  // 🔧 NUEVO: Verificar cuántos memoriales tiene cada cliente
-  const [clientMemorials, setClientMemorials] = useState({});
-  
-  useEffect(() => {
-    // Cargar conteo de memoriales para cada cliente
-    const loadClientMemorials = async () => {
-      if (clients.length > 0) {
-        const memorialCounts = {};
-        for (const client of clients) {
-          const clientId = client.id || client._id;
-          if (clientId) {
-            try {
-              // Llamar al backend para obtener memoriales del cliente
-              const memorials = await memorialService.getClientMemorials(clientId);
-              memorialCounts[clientId] = memorials.length;
-            } catch (error) {
-              console.warn('Error cargando memoriales para cliente', clientId, error);
-              memorialCounts[clientId] = 0;
-            }
-          }
-        }
-        setClientMemorials(memorialCounts);
-      }
-    };
-    
-    loadClientMemorials();
-  }, [clients]);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState(null);
-
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    
-    // Limpiar timeout anterior
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+  // ✅ BÚSQUEDA SIMPLE: Solo manejar búsqueda por nombre (estabilizada)
+  const handleSearch = useCallback((searchTerm) => {
+    if (searchTerm && searchTerm.trim()) {
+      searchClients(searchTerm);
+    } else {
+      loadClients();
     }
-    
-    // Debounce de búsqueda
-    const timeout = setTimeout(() => {
-      if (term.trim()) {
-        searchClients(term);
-      } else {
-        loadClients();
-      }
-    }, 500);
-    
-    setSearchTimeout(timeout);
-  };
+  }, [searchClients, loadClients]);
 
   const handleDeleteClient = async (clientId) => {
     if (window.confirm('¿Está seguro de eliminar este cliente? Esta acción no se puede deshacer.')) {
@@ -118,27 +76,10 @@ const ClientList = () => {
           </div>
         </div>
 
-        {/* Búsqueda */}
-        <div className="mb-6">
-          <div className="max-w-md">
-            <label htmlFor="search" className="sr-only">Buscar clientes</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                id="search"
-                type="text"
-                placeholder="Buscar por nombre, teléfono o email..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-          </div>
-        </div>
+        {/* ✅ BÚSQUEDA SIMPLE */}
+        <ClientSearch 
+          onSearch={handleSearch}
+        />
 
         {/* Error */}
         {error && (
@@ -170,21 +111,19 @@ const ClientList = () => {
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No hay clientes</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm ? 'No se encontraron clientes con ese criterio.' : 'Comienza registrando tu primer cliente.'}
+                Comienza registrando tu primer cliente.
               </p>
-              {!searchTerm && (
-                <div className="mt-6">
-                  <button
-                    onClick={() => navigate('/admin/clients/new')}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                  >
-                    <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Agregar Cliente
-                  </button>
-                </div>
-              )}
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/admin/clients/new')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                >
+                  <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Agregar Cliente
+                </button>
+              </div>
             </div>
           ) : (
             <ul className="divide-y divide-gray-200">
@@ -242,78 +181,22 @@ const ClientList = () => {
                           Ver
                         </button>
                         
-                        {/* 🔧 NUEVO: Botón inteligente de memorial */}
-                        {(() => {
-                          const clientId = client.id || client._id;
-                          const memorialCount = clientMemorials[clientId] || 0;
-                          
-                          if (memorialCount === 0) {
-                            // No tiene memoriales - botón normal
-                            return (
-                              <button
-                                onClick={() => {
-                                  console.log('=== DEBUG CREAR MEMORIAL ===');
-                                  console.log('Cliente completo:', client);
-                                  console.log('Propiedades disponibles:', Object.keys(client));
-                                  console.log('client.id:', client.id);
-                                  console.log('client._id:', client._id);
-                                  
-                                  // 🔧 FIX: Múltiples estrategias para obtener ID
-                                  const clientId = client.id || client._id || client.clientId;
-                                  
-                                  console.log('ID encontrado:', clientId);
-                                  console.log('Tipo de ID:', typeof clientId);
-                                  
-                                  if (clientId && clientId !== 'undefined' && clientId !== '') {
-                                    console.log(`✅ Navegando a: /admin/memorials/new/${clientId}`);
-                                    navigate(`/admin/memorials/new/${clientId}`);
-                                  } else {
-                                    console.error('❌ ID no válido:', {
-                                      clientId,
-                                      clientObject: client
-                                    });
-                                    alert('Error: No se puede obtener un ID válido del cliente. Ver consola para debug.');
-                                  }
-                                }}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-sm transition-colors duration-200"
-                                title="Crear memorial"
-                              >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                Memorial
-                              </button>
-                            );
-                          } else if (memorialCount === 1) {
-                            // Tiene 1 memorial - botón para ver
-                            return (
-                              <button
-                                onClick={() => navigate('/admin/memorials')}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-colors duration-200"
-                                title="Ver memorial"
-                              >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                Memorial
-                              </button>
-                            );
-                          } else {
-                            // Tiene múltiples memoriales
-                            return (
-                              <button
-                                onClick={() => navigate('/admin/memorials')}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-colors duration-200"
-                                title={`Ver ${memorialCount} memoriales`}
-                              >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                {memorialCount} Memorial{memorialCount > 1 ? 'es' : ''}
-                              </button>
-                            );
-                          }
-                        })()}
+                        {/* ✅ BOTÓN SIMPLE DE MEMORIAL */}
+                        <button
+                          onClick={() => {
+                            const clientId = client.id || client._id;
+                            if (clientId) {
+                              navigate(`/admin/memorials/new/${clientId}`);
+                            }
+                          }}
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-sm transition-colors duration-200"
+                          title="Crear memorial"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                          Memorial
+                        </button>
                         
                         <button
                           onClick={() => {

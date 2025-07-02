@@ -211,9 +211,9 @@ const MediaGallery = ({ selectedMemorial, onStatsUpdate }) => {
     try {
       console.log('🗑️ Eliminando foto ID:', photoId);
       
-      // Eliminar de Cloudinary y base de datos
+      // Eliminar archivo y registro de base de datos
       await mediaService.deleteMedia(photoId);
-      console.log('✅ Foto eliminada de Cloudinary y base de datos');
+      console.log('✅ Foto eliminada exitosamente');
       
       // Recargar la lista de fotos
       await loadPhotos();
