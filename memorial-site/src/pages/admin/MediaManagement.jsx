@@ -1,13 +1,14 @@
 // ====================================
 // src/pages/admin/MediaManagement.jsx - Gestión completa de media
 // ====================================
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import MediaGallery from '../../components/admin/media/MediaGallery';
 import MediaVideos from '../../components/admin/media/MediaVideos';
 import MediaBackgrounds from '../../components/admin/media/MediaBackgrounds';
 import MediaMusic from '../../components/admin/media/MediaMusic';
 import MediaProfilePhotos from '../../components/admin/media/MediaProfilePhotos';
+import MediaSearch from '../../components/admin/search/MediaSearch';
 import memorialService from '../../services/memorialService';
 
 const MediaManagement = () => {
@@ -96,7 +97,12 @@ const MediaManagement = () => {
     }
   };
 
-  const updateStats = (newStats) => {
+  // ✅ MANEJAR CAMBIO DE MEMORIAL (simple)
+  const handleMemorialChange = useCallback((memorial) => {
+    setSelectedMemorial(memorial);
+  }, []);
+
+  const updateStats = useCallback((newStats) => {
     setStats(prevStats => {
       const updatedStats = { ...prevStats, ...newStats };
       
@@ -110,7 +116,7 @@ const MediaManagement = () => {
       
       return updatedStats;
     });
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -131,30 +137,14 @@ const MediaManagement = () => {
               Administra contenido multimedia de los memoriales
             </p>
           </div>
-          
-          {/* Selector de Memorial */}
-          <div className="min-w-64">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Memorial Seleccionado
-            </label>
-            <select
-              value={selectedMemorial?._id || ''}
-              onChange={(e) => {
-                const memorial = memoriales.find(m => m._id === e.target.value);
-                setSelectedMemorial(memorial);
-              }}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            >
-              <option value="">Seleccionar memorial...</option>
-              {Array.isArray(memoriales) && memoriales.map(memorial => (
-                <option key={memorial._id} value={memorial._id}>
-                  {memorial.nombre} - {memorial.fechaNacimiento ? new Date(memorial.fechaNacimiento).getFullYear() : 'S/F'}
-                  {memorial.cliente ? ` (${memorial.cliente.nombre} ${memorial.cliente.apellido})` : ''}
-                </option>
-              ))}
-            </select>
           </div>
-        </div>
+
+      {/* ✅ BÚSQUEDA SIMPLE DE MEDIA */}
+      <MediaSearch 
+        memoriales={memoriales}
+        selectedMemorial={selectedMemorial}
+        onMemorialChange={handleMemorialChange}
+      />
 
         {/* Estadísticas */}
         {selectedMemorial && (

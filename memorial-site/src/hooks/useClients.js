@@ -1,7 +1,7 @@
 // ====================================
-// src/hooks/useClients.js - Hook para gestión de clientes
+// src/hooks/useClients.js - Hook para gestión de clientes (CORREGIDO)
 // ====================================
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { clientService } from '../services';
 
 export const useClients = (autoLoad = true) => {
@@ -15,8 +15,8 @@ export const useClients = (autoLoad = true) => {
     totalPages: 0
   });
 
-  // Cargar clientes con paginación
-  const loadClients = async (params = {}) => {
+  // 🔧 MEMOIZAR: Cargar clientes con paginación
+  const loadClients = useCallback(async (params = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -58,10 +58,10 @@ export const useClients = (autoLoad = true) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit]); // ✅ Solo dependencias necesarias
 
-  // Buscar clientes
-  const searchClients = async (query) => {
+  // 🔧 MEMOIZAR: Buscar clientes
+  const searchClients = useCallback(async (query) => {
     try {
       setLoading(true);
       setError(null);
@@ -74,10 +74,10 @@ export const useClients = (autoLoad = true) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // ✅ Sin dependencias porque no usa state
 
-  // Crear cliente
-  const createClient = async (clientData) => {
+  // 🔧 MEMOIZAR: Crear cliente
+  const createClient = useCallback(async (clientData) => {
     try {
       setLoading(true);
       setError(null);
@@ -93,10 +93,10 @@ export const useClients = (autoLoad = true) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Actualizar cliente
-  const updateClient = async (clientId, clientData) => {
+  // 🔧 MEMOIZAR: Actualizar cliente
+  const updateClient = useCallback(async (clientId, clientData) => {
     try {
       setLoading(true);
       setError(null);
@@ -116,10 +116,10 @@ export const useClients = (autoLoad = true) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Eliminar cliente
-  const deleteClient = async (clientId) => {
+  // 🔧 MEMOIZAR: Eliminar cliente
+  const deleteClient = useCallback(async (clientId) => {
     try {
       setLoading(true);
       setError(null);
@@ -135,24 +135,29 @@ export const useClients = (autoLoad = true) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Cambiar página
-  const changePage = (newPage) => {
+  // 🔧 MEMOIZAR: Cambiar página
+  const changePage = useCallback((newPage) => {
     loadClients({ page: newPage });
-  };
+  }, [loadClients]);
 
-  // Cambiar tamaño de página
-  const changePageSize = (newLimit) => {
+  // 🔧 MEMOIZAR: Cambiar tamaño de página
+  const changePageSize = useCallback((newLimit) => {
     loadClients({ page: 1, limit: newLimit });
-  };
+  }, [loadClients]);
 
-  // Cargar al montar el componente
+  // 🔧 MEMOIZAR: Función para limpiar errores
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // ✅ CARGAR AL MONTAR: Solo una vez con autoLoad
   useEffect(() => {
     if (autoLoad) {
       loadClients();
     }
-  }, [autoLoad]);
+  }, [autoLoad]); // ✅ NO incluir loadClients aquí - solo autoLoad
 
   return {
     clients,
@@ -166,7 +171,7 @@ export const useClients = (autoLoad = true) => {
     deleteClient,
     changePage,
     changePageSize,
-    setError
+    setError: clearError
   };
 };
 

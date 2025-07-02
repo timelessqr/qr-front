@@ -1,9 +1,10 @@
 // ====================================
 // src/components/admin/memorials/MemorialList.jsx - Lista de memoriales
 // ====================================
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { memorialService, qrService } from '../../../services';
+import MemorialSearch from '../search/MemorialSearch';
 
 // 🔧 NUEVO: Agregar función handleDeleteMemorial
 const handleDeleteMemorial = async (memorialId, memorialName, loadMemorialsCallback) => {
@@ -21,6 +22,7 @@ const handleDeleteMemorial = async (memorialId, memorialName, loadMemorialsCallb
 const MemorialList = () => {
   const navigate = useNavigate();
   const [memorials, setMemorials] = useState([]);
+  const [allMemorials, setAllMemorials] = useState([]); // 🆕 NUEVO: Guardar todos los memoriales
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -45,7 +47,8 @@ const MemorialList = () => {
       console.log('Memoriales procesados:', memorialsArray);
       console.log('Cantidad de memoriales:', memorialsArray.length);
       
-      setMemorials(memorialsArray);
+      setAllMemorials(memorialsArray); // 🆕 NUEVO: Guardar todos
+      setMemorials(memorialsArray);    // 🆕 NUEVO: Mostrar todos inicialmente
     } catch (err) {
       setError(err.message);
     } finally {
@@ -64,6 +67,22 @@ const MemorialList = () => {
     }
     return { status: 'Sin QR', color: 'bg-yellow-100 text-yellow-800' };
   };
+
+  // ✅ BÚSQUEDA SIMPLE: Solo filtrar por nombre
+  const handleSearch = useCallback((searchTerm) => {
+    if (searchTerm && searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const filtered = allMemorials.filter(memorial => 
+        memorial.nombre.toLowerCase().includes(term) ||
+        (memorial.biografia || '').toLowerCase().includes(term) ||
+        (memorial.client?.nombre || memorial.cliente?.nombre || '').toLowerCase().includes(term) ||
+        (memorial.client?.apellido || memorial.cliente?.apellido || '').toLowerCase().includes(term)
+      );
+      setMemorials(filtered);
+    } else {
+      setMemorials(allMemorials);
+    }
+  }, [allMemorials]);
 
   const handleViewMemorial = (qrCode) => {
     // Abrir el memorial público en nueva pestaña
@@ -100,6 +119,9 @@ const MemorialList = () => {
         {/* Header */}
         <div className="md:flex md:items-center md:justify-between mb-6">
           <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+              Memoriales
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
               Gestiona los memoriales digitales y sus códigos QR
             </p>
@@ -117,6 +139,11 @@ const MemorialList = () => {
             </button>
           </div>
         </div>
+
+        {/* ✅ BÚSQUEDA SIMPLE */}
+        <MemorialSearch 
+          onSearch={handleSearch}
+        />
 
         {/* Error */}
         {error && (

@@ -158,9 +158,9 @@ const MediaProfilePhotos = ({ selectedMemorial, onStatsUpdate }) => {
         );
         
         if (mediaToDelete) {
-          // Eliminar de Cloudinary y base de datos
+          // Eliminar archivo y registro de base de datos
           await mediaService.deleteMedia(mediaToDelete._id || mediaToDelete.id);
-          console.log('✅ Archivo eliminado de Cloudinary y base de datos');
+          console.log('✅ Archivo eliminado exitosamente');
         }
       }
       

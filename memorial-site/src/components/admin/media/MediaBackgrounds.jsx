@@ -1,5 +1,5 @@
 // ====================================
-// src/components/admin/media/MediaBackgrounds.jsx - Gestión de imágenes de fondo del memorial con Cloudinary
+// src/components/admin/media/MediaBackgrounds.jsx - Gestión de imágenes de fondo del memorial
 // ====================================
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaService from '../../../services/mediaService';

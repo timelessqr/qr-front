@@ -1,5 +1,5 @@
 // ====================================
-// src/components/admin/media/MediaVideos.jsx - Gestión de videos del memorial con Cloudinary
+// src/components/admin/media/MediaVideos.jsx - Gestión de videos del memorial
 // ====================================
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaService from '../../../services/mediaService';
@@ -156,7 +156,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
 
     try {
       setUploading(true);
-      console.log('🎥 Iniciando upload de', validFiles.length, 'videos a Cloudinary');
+      console.log('🎥 Iniciando upload de', validFiles.length, 'videos');
       
       const response = await mediaService.uploadFiles(profileId, formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -170,7 +170,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
       });
 
       if (response.success) {
-        console.log('✅ Upload exitoso a Cloudinary:', response);
+        console.log('✅ Upload exitoso:', response);
         await loadVideos();
         setUploadProgress({});
         
@@ -223,9 +223,9 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
     try {
       console.log('🗑️ Eliminando video ID:', videoId);
       
-      // Eliminar de Cloudinary y base de datos
+      // Eliminar archivo y registro de base de datos
       await mediaService.deleteMedia(videoId);
-      console.log('✅ Video eliminado de Cloudinary y base de datos');
+      console.log('✅ Video eliminado exitosamente');
       
       // Recargar la lista de videos
       await loadVideos();
@@ -301,7 +301,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
           </div>
           <div className="ml-3">
             <h4 className="text-sm font-medium text-amber-800">
-              Límites para Videos - Cloudinary
+              Límites para Videos
             </h4>
             <p className="mt-1 text-sm text-amber-700">
               Tamaño máximo: 20MB • Duración máxima: 1 minuto • Formatos: MP4, MOV, AVI, WMV
@@ -329,7 +329,7 @@ const MediaVideos = ({ selectedMemorial, onStatsUpdate }) => {
           </div>
           <div>
             <h4 className="text-lg font-medium text-gray-900">
-              {uploading ? 'Subiendo videos a Cloudinary...' : 'Arrastra videos aquí'}
+              {uploading ? 'Subiendo videos...' : 'Arrastra videos aquí'}
             </h4>
             <p className="text-gray-500">
               o haz clic en "Subir Videos" para seleccionar

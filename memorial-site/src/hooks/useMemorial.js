@@ -1,7 +1,7 @@
 // ====================================
-// src/hooks/useMemorial.js - Hook para gestión de memoriales
+// src/hooks/useMemorial.js - Hook para gestión de memoriales (CORREGIDO)
 // ====================================
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { memorialService } from '../services';
 
 export const useMemorial = (memorialId = null) => {
@@ -9,8 +9,8 @@ export const useMemorial = (memorialId = null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Cargar memorial específico
-  const loadMemorial = async (id = memorialId) => {
+  // 🔧 MEMOIZAR: Cargar memorial específico
+  const loadMemorial = useCallback(async (id = memorialId) => {
     if (!id) return;
     
     try {
@@ -18,15 +18,17 @@ export const useMemorial = (memorialId = null) => {
       setError(null);
       const data = await memorialService.getMemorialById(id);
       setMemorial(data);
+      return data;
     } catch (err) {
       setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
-  };
+  }, [memorialId]);
 
-  // Cargar memorial público por QR
-  const loadPublicMemorial = async (qrCode) => {
+  // 🔧 MEMOIZAR: Cargar memorial público por QR
+  const loadPublicMemorial = useCallback(async (qrCode) => {
     try {
       setLoading(true);
       setError(null);
@@ -39,10 +41,10 @@ export const useMemorial = (memorialId = null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Crear nuevo memorial
-  const createMemorial = async (memorialData) => {
+  // 🔧 MEMOIZAR: Crear nuevo memorial
+  const createMemorial = useCallback(async (memorialData) => {
     try {
       setLoading(true);
       setError(null);
@@ -55,10 +57,10 @@ export const useMemorial = (memorialId = null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Actualizar memorial
-  const updateMemorial = async (id, memorialData) => {
+  // 🔧 MEMOIZAR: Actualizar memorial
+  const updateMemorial = useCallback(async (id, memorialData) => {
     try {
       setLoading(true);
       setError(null);
@@ -71,14 +73,19 @@ export const useMemorial = (memorialId = null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Efecto para cargar memorial al montar el componente
+  // 🔧 MEMOIZAR: Función para limpiar errores
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // ✅ Efecto para cargar memorial al montar el componente
   useEffect(() => {
     if (memorialId) {
       loadMemorial(memorialId);
     }
-  }, [memorialId]);
+  }, [memorialId]); // ✅ Solo memorialId, no loadMemorial
 
   return {
     memorial,
@@ -89,7 +96,7 @@ export const useMemorial = (memorialId = null) => {
     createMemorial,
     updateMemorial,
     setMemorial,
-    setError
+    setError: clearError
   };
 };
 
