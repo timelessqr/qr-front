@@ -108,21 +108,6 @@ const MusicPlayer = ({ songs, onClose, onSelectSong, loading = false }) => {
                             <p className="font-memorial text-stone-500 text-sm">Aún no se han agregado canciones</p>
                         </div>
                     )}
-                    
-                    {/* Información sobre archivos MP3 */}
-                    {songs.length > 0 && (
-                        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="flex items-start">
-                                <svg className="w-4 h-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div className="text-xs text-green-700">
-                                    <p className="font-memorial font-medium mb-1">Archivos de Audio MP3</p>
-                                    <p className="font-memorial">Los archivos se reproducen con controles completos de reproducción.</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </motion.div>
         </motion.div>

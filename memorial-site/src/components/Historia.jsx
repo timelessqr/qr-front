@@ -57,11 +57,6 @@ const Historia = ({ memorialData }) => {
   return (
     <div className="animate-fadeIn font-memorial">
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 sm:p-6 lg:p-8 border border-amber-100 shadow-sm">
-        {/* Título con tipografía elegante */}
-        <h2 className="font-memorial text-memorial-subtitle sm:text-memorial-title text-gray-800 mb-6 sm:mb-8 text-center font-semibold tracking-wide">
-          Su Historia
-        </h2>
-        
         <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12">
           {/* Columna izquierda: Foto y datos personales */}
           <div className="lg:w-2/5 xl:w-1/3">

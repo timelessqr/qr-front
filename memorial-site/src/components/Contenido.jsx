@@ -143,7 +143,6 @@ const Contenido = ({ memorialData }) => {
                 }
               }}
             />
-            {/* Título removido para vista más limpia */}
           </div>
         </div>
       )}
@@ -181,7 +180,6 @@ const Contenido = ({ memorialData }) => {
             >
               Tu navegador no soporta el elemento video.
             </video>
-            {/* Título removido para vista más limpia */}
           </div>
         </div>
       )}
@@ -252,41 +250,70 @@ const Contenido = ({ memorialData }) => {
               ))}
             </div>
           ) : (
-            // Cuadrícula de videos
+            // 🎥 VIDEOS CON BOTÓN PLAY OPTIMIZADO
             <div
-              className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${
+              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 transition-opacity duration-300 ${
                 fade ? "opacity-100" : "opacity-0"
               }`}
             >
               {contenidoMostrado.map((video, i) => (
                 <div
                   key={video.id || video._id || i}
-                  className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-transform duration-300 hover:shadow-lg"
+                  className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                   onClick={() => abrirVideo(video)}
                 >
-                  <div className="relative bg-gray-800 h-48">
-                    {/* Video como preview */}
+                  <div className="relative bg-gray-900 h-48 rounded-lg overflow-hidden">
+                    {/* Video como preview con imagen de fondo mejorada */}
                     <video
                       src={video.url || video.archivo?.url}
                       className="w-full h-full object-cover"
-                      preload="metadata"
+                      preload="auto"
                       muted
+                      poster={video.thumbnail || video.urlThumbnail}
+                      onLoadedData={(e) => {
+                        // Cuando se carga el video, intentar mostrar el primer frame
+                        e.target.currentTime = 0.1;
+                      }}
                       onError={(e) => {
-                        // Si falla el video, mostrar emoji
+                        // Si falla el video, mostrar imagen de fondo elegante
                         e.target.style.display = 'none';
-                        if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('emoji-fallback')) {
-                          const emojiDiv = document.createElement('div');
-                          emojiDiv.className = 'emoji-fallback w-full h-full flex items-center justify-center text-4xl bg-gray-800 text-white';
-                          emojiDiv.textContent = '🎥';
-                          e.target.parentNode.appendChild(emojiDiv);
+                        if (!e.target.nextElementSibling || !e.target.nextElementSibling.classList.contains('video-fallback')) {
+                          const fallbackDiv = document.createElement('div');
+                          fallbackDiv.className = 'video-fallback w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 text-white';
+                          fallbackDiv.innerHTML = `
+                            <div class="text-5xl mb-3 opacity-80">🎬</div>
+                            <div class="text-sm font-medium opacity-90">Video</div>
+                            <div class="text-xs opacity-70 mt-1">Toca para reproducir</div>
+                          `;
+                          e.target.parentNode.appendChild(fallbackDiv);
                         }
                       }}
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                      <span className="text-white font-medium text-lg">🎥 Reproducir video</span>
+                    
+                    {/* 🎥 OVERLAY CON BOTÓN PLAY MEJORADO */}
+                    <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center rounded-lg">
+                      <div className="relative">
+                        {/* Botón play más elegante y menos redondo */}
+                        <div className="relative w-12 h-12 bg-white bg-opacity-90 rounded-lg flex items-center justify-center shadow-lg group-hover:bg-white group-hover:scale-105 transition-all duration-300 backdrop-blur-sm border border-white border-opacity-20">
+                          {/* Ícono de play centrado */}
+                          <svg 
+                            className="w-5 h-5 text-gray-800 ml-0.5" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.68L9.54 5.98C8.87 5.55 8 6.03 8 6.82z"/>
+                          </svg>
+                        </div>
+                        
+                        {/* Indicador de duración si está disponible */}
+                        {video.dimensiones?.duracion && (
+                          <div className="absolute -bottom-7 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            {formatearDuracion(video.dimensiones.duracion)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {/* Info del video removida para vista más limpia */}
                 </div>
               ))}
             </div>
@@ -345,6 +372,20 @@ const Contenido = ({ memorialData }) => {
       </div>
     </div>
   );
+};
+
+// 🔧 Función auxiliar para formatear duración
+const formatearDuracion = (duracionSegundos) => {
+  if (!duracionSegundos) return '';
+  
+  const minutos = Math.floor(duracionSegundos / 60);
+  const segundos = Math.floor(duracionSegundos % 60);
+  
+  if (minutos > 0) {
+    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+  } else {
+    return `0:${segundos.toString().padStart(2, '0')}`;
+  }
 };
 
 export default Contenido;

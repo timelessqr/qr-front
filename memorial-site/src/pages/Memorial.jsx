@@ -14,6 +14,14 @@ import Comentarios from '../components/Comentarios';
 import MusicPlayer from '../components/MusicPlayer';
 import MiniPlayer from '../components/MiniPlayer';
 
+// React Icons para redes sociales
+import {
+  FaFacebookSquare,
+  FaTiktok,
+  FaInstagramSquare,
+  FaWhatsapp
+} from "react-icons/fa";
+
 // Importar servicios
 import memorialService from '../services/memorialService';
 import mediaService from '../services/mediaService';
@@ -338,6 +346,55 @@ const Memorial = () => {
       {/* Contenido dinámico según la pestaña seleccionada */}
       <div className="flex-grow container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {renderTabContent()}
+      </div>
+      
+      {/* Redes sociales del memorial - estilo navbar */}
+      <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center">
+            <h3 className="font-memorial text-lg font-medium text-gray-800 mb-4">
+              Síguenos en redes sociales
+            </h3>
+            <div className="flex justify-center space-x-4">
+              <a 
+                href="https://www.facebook.com/share/16D7GtH55G/?mibextid=wwXIfr" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-700 hover:text-blue-600 transition-colors transform hover:scale-110 duration-200" 
+                aria-label="Facebook"
+              >
+                <FaFacebookSquare size={20} />
+              </a>
+              <a 
+                href="https://www.instagram.com/lazosdevidaqr?igsh=YnVuZDZ2NnVmMHd1" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-700 hover:text-pink-600 transition-colors transform hover:scale-110 duration-200" 
+                aria-label="Instagram"
+              >
+                <FaInstagramSquare size={20} />
+              </a>
+              <a 
+                href="http://www.tiktok.com/@lazosdevidaqr" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-700 hover:text-black transition-colors transform hover:scale-110 duration-200" 
+                aria-label="TikTok"
+              >
+                <FaTiktok size={20} />
+              </a>
+              <a 
+                href="https://wa.link/bi4zru" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-green-500 hover:text-green-600 transition-colors transform hover:scale-110 duration-200" 
+                aria-label="WhatsApp"
+              >
+                <FaWhatsapp size={24} />
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
       
       <Footer />
