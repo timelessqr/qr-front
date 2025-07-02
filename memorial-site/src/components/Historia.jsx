@@ -23,9 +23,9 @@ const Historia = ({ memorialData }) => {
 
   return (
     <div className="animate-fadeIn">
-      <div className="bg-orange-50 rounded-lg p-6 border border-orange-100">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Biografía</h2>
-        <div className="flex flex-col md:flex-row gap-8">
+      <div className="bg-orange-50 rounded-lg p-4 sm:p-6 border border-orange-100">
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6 text-center">Biografía</h2>
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-6 md:gap-8">
           <div className="md:w-1/3">
             <div className="aspect-square rounded-lg overflow-hidden shadow-md mb-4 bg-gray-100">
               {/* Verificar si hay imagen para mostrar */}
@@ -59,13 +59,13 @@ const Historia = ({ memorialData }) => {
                 📸
               </div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-800 mb-4">Datos personales</h3>
-              <div className="space-y-3">
+            <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-800 mb-3 sm:mb-4 text-sm sm:text-base">Datos personales</h3>
+              <div className="space-y-2 sm:space-y-3">
                 {memorialData?.fechaNacimiento && (
-                  <div className="flex items-start">
-                    <span className="font-bold text-gray-600 w-28 flex-shrink-0">Nacimiento:</span>
-                    <span className="text-gray-800">
+                  <div className="flex flex-col sm:flex-row sm:items-start">
+                    <span className="font-bold text-gray-600 text-sm sm:w-28 flex-shrink-0 mb-1 sm:mb-0">Nacimiento:</span>
+                    <span className="text-gray-800 text-sm sm:text-base">
                       {new Date(memorialData.fechaNacimiento).toLocaleDateString('es-ES', { 
                         day: 'numeric', 
                         month: 'long', 
@@ -76,9 +76,9 @@ const Historia = ({ memorialData }) => {
                 )}
                 
                 {memorialData?.fechaFallecimiento && (
-                  <div className="flex items-start">
-                    <span className="font-bold text-gray-600 w-28 flex-shrink-0">Fallecimiento:</span>
-                    <span className="text-gray-800">
+                  <div className="flex flex-col sm:flex-row sm:items-start">
+                    <span className="font-bold text-gray-600 text-sm sm:w-28 flex-shrink-0 mb-1 sm:mb-0">Fallecimiento:</span>
+                    <span className="text-gray-800 text-sm sm:text-base">
                       {new Date(memorialData.fechaFallecimiento).toLocaleDateString('es-ES', { 
                         day: 'numeric', 
                         month: 'long', 
@@ -89,32 +89,32 @@ const Historia = ({ memorialData }) => {
                 )}
                 
                 {memorialData?.edadAlFallecer && (
-                  <div className="flex items-start">
-                    <span className="font-bold text-gray-600 w-28 flex-shrink-0">Edad:</span>
-                    <span className="text-gray-800">{memorialData.edadAlFallecer} años</span>
+                  <div className="flex flex-col sm:flex-row sm:items-start">
+                    <span className="font-bold text-gray-600 text-sm sm:w-28 flex-shrink-0 mb-1 sm:mb-0">Edad:</span>
+                    <span className="text-gray-800 text-sm sm:text-base">{memorialData.edadAlFallecer} años</span>
                   </div>
                 )}
                 
                 {memorialData?.profesion && (
-                  <div className="flex items-start">
-                    <span className="font-bold text-gray-600 w-28 flex-shrink-0">Profesión:</span>
-                    <span className="text-gray-800">{memorialData.profesion}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-start">
+                    <span className="font-bold text-gray-600 text-sm sm:w-28 flex-shrink-0 mb-1 sm:mb-0">Profesión:</span>
+                    <span className="text-gray-800 text-sm sm:text-base">{memorialData.profesion}</span>
                   </div>
                 )}
                 
                 {memorialData?.familia?.conyuge && (
-                  <div className="flex items-start">
-                    <span className="font-bold text-gray-600 w-28 flex-shrink-0">Cónyuge:</span>
-                    <span className="text-gray-800">{memorialData.familia.conyuge}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-start">
+                    <span className="font-bold text-gray-600 text-sm sm:w-28 flex-shrink-0 mb-1 sm:mb-0">Cónyuge:</span>
+                    <span className="text-gray-800 text-sm sm:text-base">{memorialData.familia.conyuge}</span>
                   </div>
                 )}
                 
                 {memorialData?.familia?.hijos && (
-                  <div className="flex items-start">
-                    <span className="font-bold text-gray-600 w-28 flex-shrink-0">Hijos:</span>
+                  <div className="flex flex-col sm:flex-row sm:items-start">
+                    <span className="font-bold text-gray-600 text-sm sm:w-28 flex-shrink-0 mb-1 sm:mb-0">Hijos:</span>
                     <div className="flex flex-wrap gap-1 text-gray-800">
                       {memorialData.familia.hijos.map((hijo, index) => (
-                        <span key={index} className="bg-gray-100 px-2 py-1 rounded-md text-sm">
+                        <span key={index} className="bg-gray-100 px-2 py-1 rounded-md text-xs sm:text-sm">
                           {hijo}
                         </span>
                       ))}
@@ -128,18 +128,18 @@ const Historia = ({ memorialData }) => {
           <div className="md:w-2/3">
             <div 
               ref={biografiaRef}
-              className={`prose max-w-none text-gray-700 ${!mostrarCompleta && necesitaColapsar ? 'max-h-[600px] overflow-hidden' : ''}`}
+              className={`prose max-w-none text-gray-700 ${!mostrarCompleta && necesitaColapsar ? 'max-h-[400px] sm:max-h-[600px] overflow-hidden' : ''}`}
             >
               {memorialData?.biografia ? (
                 memorialData.biografia.split('\n').map((paragraph, index) => (
                   paragraph.trim() && (
-                    <p key={index} className="text-lg leading-relaxed mt-4 first:mt-0">
+                    <p key={index} className="text-sm sm:text-base md:text-lg leading-relaxed mt-3 sm:mt-4 first:mt-0">
                       {paragraph}
                     </p>
                   )
                 ))
               ) : (
-                <p className="text-lg leading-relaxed text-gray-500">
+                <p className="text-sm sm:text-base md:text-lg leading-relaxed text-gray-500">
                   No hay biografía disponible para este memorial.
                 </p>
               )}

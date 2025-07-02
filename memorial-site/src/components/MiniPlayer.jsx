@@ -11,23 +11,23 @@ const icons = {
 const MiniPlayer = ({ song, onStop, onTogglePlay, isPlaying }) => {
     return (
         <motion.div
-            className="fixed bottom-4 right-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg flex items-center gap-4 p-3"
+            className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-auto sm:right-4 z-40 bg-white/90 backdrop-blur-md rounded-lg shadow-lg flex items-center gap-2 sm:gap-4 p-2 sm:p-3 max-w-sm sm:max-w-none mx-auto sm:mx-0"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
         >
             {/* Icono de música */}
-            <div className="w-12 h-12 rounded flex items-center justify-center flex-shrink-0 bg-green-100">
-                <icons.music className="w-6 h-6 text-green-600" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded flex items-center justify-center flex-shrink-0 bg-green-100">
+                <icons.music className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             </div>
 
             {/* Información de la canción */}
-            <div className="flex-1 max-w-48">
-                <p className="text-sm font-medium text-stone-700 truncate">
+            <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-stone-700 truncate">
                     {song.title || song.titulo || song.archivo?.nombreOriginal || 'Canción sin título'}
                 </p>
-                <div className="flex items-center space-x-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                    <span className="text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                         MP3
                     </span>
                     <span className="text-xs text-stone-500">
@@ -40,17 +40,17 @@ const MiniPlayer = ({ song, onStop, onTogglePlay, isPlaying }) => {
             <div className="flex items-center space-x-1">
                 <button 
                     onClick={onTogglePlay} 
-                    className="p-2 rounded-full hover:bg-stone-200"
+                    className="p-1.5 sm:p-2 rounded-full hover:bg-stone-200 touch-manipulation"
                     title={isPlaying ? "Pausar" : "Reproducir"}
                 >
                     {isPlaying ? (
-                        <icons.pause className="w-5 h-5 text-stone-600" />
+                        <icons.pause className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
                     ) : (
-                        <icons.play className="w-5 h-5 text-stone-600" />
+                        <icons.play className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
                     )}
                 </button>
-                <button onClick={onStop} className="p-2 rounded-full hover:bg-stone-200" title="Detener">
-                    <icons.stop className="w-5 h-5 text-stone-600" />
+                <button onClick={onStop} className="p-1.5 sm:p-2 rounded-full hover:bg-stone-200 touch-manipulation" title="Detener">
+                    <icons.stop className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
                 </button>
             </div>
         </motion.div>

@@ -19,3 +19,30 @@
     transform: translateY(0);
   }
 }
+
+/* Optimizaciones para móvil */
+@layer base {
+  /* Mejorar el toque en dispositivos móviles */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Optimización de viewport para móvil */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  
+  /* Mejorar el scroll en iOS */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Optimización de fuentes para pantallas pequeñas */
+  @media (max-width: 640px) {
+    body {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+}
