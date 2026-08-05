@@ -357,7 +357,7 @@ const Memorial = () => {
             </h3>
             <div className="flex justify-center space-x-4">
               <a 
-                href="https://www.facebook.com/share/16D7GtH55G/?mibextid=wwXIfr" 
+                href="https://www.facebook.com/qr_lazosdevida"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-gray-700 hover:text-blue-600 transition-colors transform hover:scale-110 duration-200" 
@@ -366,7 +366,7 @@ const Memorial = () => {
                 <FaFacebookSquare size={20} />
               </a>
               <a 
-                href="https://www.instagram.com/lazosdevidaqr?igsh=YnVuZDZ2NnVmMHd1" 
+                href="https://www.instagram.com/qr_lazosdevida"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-gray-700 hover:text-pink-600 transition-colors transform hover:scale-110 duration-200" 
@@ -375,7 +375,7 @@ const Memorial = () => {
                 <FaInstagramSquare size={20} />
               </a>
               <a 
-                href="http://www.tiktok.com/@lazosdevidaqr" 
+                href="https://www.tiktok.com/@qr_lazosdevida"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-gray-700 hover:text-black transition-colors transform hover:scale-110 duration-200" 
@@ -384,7 +384,7 @@ const Memorial = () => {
                 <FaTiktok size={20} />
               </a>
               <a 
-                href="https://wa.link/bi4zru" 
+                href="https://wa.me/56933783343"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-green-500 hover:text-green-600 transition-colors transform hover:scale-110 duration-200" 
