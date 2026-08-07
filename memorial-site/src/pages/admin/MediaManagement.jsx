@@ -2,7 +2,6 @@
 // src/pages/admin/MediaManagement.jsx - Gestión completa de media
 // ====================================
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import MediaGallery from '../../components/admin/media/MediaGallery';
 import MediaVideos from '../../components/admin/media/MediaVideos';
 import MediaBackgrounds from '../../components/admin/media/MediaBackgrounds';
@@ -10,11 +9,12 @@ import MediaMusic from '../../components/admin/media/MediaMusic';
 import MediaProfilePhotos from '../../components/admin/media/MediaProfilePhotos';
 import MediaSearch from '../../components/admin/search/MediaSearch';
 import memorialService from '../../services/memorialService';
+import clientService from '../../services/clientService';
 
 const MediaManagement = () => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('perfil');
   const [memoriales, setMemoriales] = useState([]);
+  const [clients, setClients] = useState([]);
   const [selectedMemorial, setSelectedMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -80,10 +80,40 @@ const MediaManagement = () => {
   const loadMemoriales = async () => {
     try {
       setLoading(true);
-      const response = await memorialService.getMemorials();
-      
-      const memorialesData = response.data?.profiles || response.profiles || [];
+      const [firstResponse, firstClientsResponse] = await Promise.all([
+        memorialService.getMemorials({ page: 1, limit: 100 }),
+        clientService.getClients({ page: 1, limit: 100 })
+      ]);
+      const firstPage = firstResponse.data?.profiles || firstResponse.profiles || [];
+      const totalPages = Number(firstResponse.pagination?.totalPages || 1);
+      const firstClientsPage = firstClientsResponse.data?.clients || firstClientsResponse.clients || [];
+      const totalClientPages = Number(firstClientsResponse.pagination?.totalPages || 1);
+      const [remainingResponses, remainingClientResponses] = await Promise.all([
+        totalPages > 1
+          ? Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              memorialService.getMemorials({ page: index + 2, limit: 100 })
+            )
+          )
+          : [],
+        totalClientPages > 1
+          ? Promise.all(
+            Array.from({ length: totalClientPages - 1 }, (_, index) =>
+              clientService.getClients({ page: index + 2, limit: 100 })
+            )
+          )
+          : []
+      ]);
+      const memorialesData = remainingResponses.reduce((allMemorials, response) => {
+        const pageMemorials = response.data?.profiles || response.profiles || [];
+        return allMemorials.concat(pageMemorials);
+      }, firstPage);
+      const clientsData = remainingClientResponses.reduce((allClients, response) => {
+        const pageClients = response.data?.clients || response.clients || [];
+        return allClients.concat(pageClients);
+      }, firstClientsPage);
       setMemoriales(memorialesData);
+      setClients(clientsData);
       
       // Si hay memoriales, seleccionar el primero por defecto
       if (memorialesData.length > 0) {
@@ -92,6 +122,7 @@ const MediaManagement = () => {
     } catch (error) {
       console.error('❌ Error cargando memoriales:', error);
       setMemoriales([]);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -142,6 +173,7 @@ const MediaManagement = () => {
       {/* ✅ BÚSQUEDA SIMPLE DE MEDIA */}
       <MediaSearch 
         memoriales={memoriales}
+        clients={clients}
         selectedMemorial={selectedMemorial}
         onMemorialChange={handleMemorialChange}
       />
