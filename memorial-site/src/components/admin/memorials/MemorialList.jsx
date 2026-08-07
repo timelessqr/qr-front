@@ -1,10 +1,36 @@
 // ====================================
 // src/components/admin/memorials/MemorialList.jsx - Lista de memoriales
 // ====================================
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { memorialService, qrService } from '../../../services';
+import { memorialService } from '../../../services';
 import MemorialSearch from '../search/MemorialSearch';
+
+const createInitialPagination = () => ({
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 0,
+  hasNext: false,
+  hasPrev: false,
+  search: ''
+});
+
+const normalizePagination = (apiPagination = {}, requestParams, memorialsCount) => {
+  const page = Number(apiPagination.currentPage ?? apiPagination.page ?? requestParams.page);
+  const limit = Number(apiPagination.itemsPerPage ?? apiPagination.limit ?? requestParams.limit);
+  const total = Number(apiPagination.totalItems ?? apiPagination.total ?? memorialsCount);
+
+  return {
+    page,
+    limit,
+    total,
+    totalPages: Number(apiPagination.totalPages ?? Math.ceil(total / limit)),
+    hasNext: apiPagination.hasNext ?? apiPagination.hasNextPage ?? page * limit < total,
+    hasPrev: apiPagination.hasPrev ?? apiPagination.hasPrevPage ?? page > 1,
+    search: requestParams.search
+  };
+};
 
 // 🔧 NUEVO: Agregar función handleDeleteMemorial
 const handleDeleteMemorial = async (memorialId, memorialName, loadMemorialsCallback) => {
@@ -22,39 +48,57 @@ const handleDeleteMemorial = async (memorialId, memorialName, loadMemorialsCallb
 const MemorialList = () => {
   const navigate = useNavigate();
   const [memorials, setMemorials] = useState([]);
-  const [allMemorials, setAllMemorials] = useState([]); // 🆕 NUEVO: Guardar todos los memoriales
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pagination, setPagination] = useState(createInitialPagination);
+  const paginationRef = useRef(createInitialPagination());
+  const latestRequestRef = useRef(0);
 
-  useEffect(() => {
-    loadMemorials();
-  }, []);
+  const loadMemorials = useCallback(async (params = {}) => {
+    const requestId = latestRequestRef.current + 1;
+    latestRequestRef.current = requestId;
 
-  const loadMemorials = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await memorialService.getMemorials();
-      
-      // 🚨 DEBUG: Ver estructura de datos del backend
-      console.log('=== DEBUG MemorialList loadMemorials ===');
-      console.log('Data recibida:', data);
-      console.log('¿Tiene data.profiles?', !!data.profiles);
-      console.log('¿Es data un array?', Array.isArray(data));
-      
-      // 🔧 FIX: Manejar diferentes estructuras de respuesta
+
+      const currentPagination = paginationRef.current;
+      const requestParams = {
+        page: params.page ?? currentPagination.page,
+        limit: params.limit ?? currentPagination.limit,
+        search: params.search ?? currentPagination.search
+      };
+
+      const data = await memorialService.getMemorials(requestParams);
       const memorialsArray = data.profiles || data || [];
-      console.log('Memoriales procesados:', memorialsArray);
-      console.log('Cantidad de memoriales:', memorialsArray.length);
-      
-      setAllMemorials(memorialsArray); // 🆕 NUEVO: Guardar todos
-      setMemorials(memorialsArray);    // 🆕 NUEVO: Mostrar todos inicialmente
+
+      if (requestId !== latestRequestRef.current) {
+        return data;
+      }
+
+      const normalizedPagination = normalizePagination(
+        data.pagination,
+        requestParams,
+        memorialsArray.length
+      );
+
+      setMemorials(memorialsArray);
+      paginationRef.current = normalizedPagination;
+      setPagination(normalizedPagination);
+
+      return data;
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadMemorials();
+  }, [loadMemorials]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Sin fecha';
@@ -68,21 +112,14 @@ const MemorialList = () => {
     return { status: 'Sin QR', color: 'bg-yellow-100 text-yellow-800' };
   };
 
-  // ✅ BÚSQUEDA SIMPLE: Solo filtrar por nombre
+  // ✅ BÚSQUEDA PAGINADA
   const handleSearch = useCallback((searchTerm) => {
-    if (searchTerm && searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      const filtered = allMemorials.filter(memorial => 
-        memorial.nombre.toLowerCase().includes(term) ||
-        (memorial.biografia || '').toLowerCase().includes(term) ||
-        (memorial.client?.nombre || memorial.cliente?.nombre || '').toLowerCase().includes(term) ||
-        (memorial.client?.apellido || memorial.cliente?.apellido || '').toLowerCase().includes(term)
-      );
-      setMemorials(filtered);
-    } else {
-      setMemorials(allMemorials);
-    }
-  }, [allMemorials]);
+    loadMemorials({ page: 1, search: searchTerm.trim() });
+  }, [loadMemorials]);
+
+  const changePage = useCallback((newPage) => {
+    loadMemorials({ page: newPage });
+  }, [loadMemorials]);
 
   const handleViewMemorial = (qrCode) => {
     // Abrir el memorial público en nueva pestaña
@@ -93,7 +130,7 @@ const MemorialList = () => {
     navigate(`/admin/memorials/${memorialId}/print-qr`);
   };
 
-  if (loading) {
+  if (loading && memorials.length === 0 && pagination.total === 0) {
     return (
       <div>
         <div className="max-w-7xl mx-auto">
@@ -125,6 +162,9 @@ const MemorialList = () => {
             <p className="mt-1 text-sm text-gray-500">
               Gestiona los memoriales digitales y sus códigos QR
             </p>
+            <p className="mt-2 text-sm font-medium text-gray-700">
+              {pagination.total} {pagination.total === 1 ? 'memorial activo' : 'memoriales activos'}
+            </p>
           </div>
           <div className="mt-4 flex md:mt-0 md:ml-4">
             <button
@@ -144,6 +184,12 @@ const MemorialList = () => {
         <MemorialSearch 
           onSearch={handleSearch}
         />
+
+        {loading && (
+          <p className="mb-4 text-sm text-gray-500" aria-live="polite">
+            Cargando memoriales...
+          </p>
+        )}
 
         {/* Error */}
         {error && (
@@ -191,8 +237,8 @@ const MemorialList = () => {
                 return (
                   <li key={memorial._id} className="hover:bg-gray-50 transition-colors duration-150">
                     <div className="px-6 py-5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center flex-1">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start w-full sm:items-center sm:flex-1">
                           <div className="flex-shrink-0">
                             <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">
                               <span className="text-white font-bold text-xl">
@@ -200,13 +246,13 @@ const MemorialList = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="ml-6 flex-1">
+                          <div className="ml-4 min-w-0 flex-1 sm:ml-6">
                             <div className="flex items-center justify-between">
                               <div>
                                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
                                   {memorial.nombre}
                                 </h3>
-                                <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-2">
                                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
                                     {status.status}
                                   </span>
@@ -217,21 +263,9 @@ const MemorialList = () => {
                                   )}
                                 </div>
                                 <p className="text-sm text-gray-600 mb-1">
-                                  Cliente: {(() => {
-                                    // 🚨 DEBUG: Ver estructura del cliente en memorial
-                                    console.log('Memorial completo:', memorial);
-                                    console.log('Campo cliente:', memorial.client || memorial.cliente);
-                                    
-                                    const clientName = memorial.client?.nombre || 
-                                                     memorial.cliente?.nombre || 
-                                                     memorial.clientName || 
-                                                     'No especificado';
-                                                     
-                                    console.log('Nombre del cliente extraído:', clientName);
-                                    return clientName;
-                                  })()}
+                                  Cliente: {memorial.client?.nombre || memorial.cliente?.nombre || memorial.clientName || 'No especificado'}
                                 </p>
-                                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                                   <span>Creado: {formatDate(memorial.createdAt)}</span>
                                   {memorial.fechaNacimiento && (
                                     <span>Nac: {formatDate(memorial.fechaNacimiento)}</span>
@@ -244,7 +278,7 @@ const MemorialList = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3 ml-6">
+                        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto sm:items-center sm:space-x-3 sm:ml-6">
                           {memorial.qr && (
                             <>
                               <button
@@ -309,6 +343,45 @@ const MemorialList = () => {
             </ul>
           )}
         </div>
+
+        {memorials.length > 0 && (
+          <div className="bg-white px-4 py-3 flex flex-col gap-3 border-t border-gray-200 sm:px-6 sm:flex-row sm:items-center sm:justify-between mt-6">
+            <p className="text-sm text-gray-700">
+              Mostrando{' '}
+              <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span>
+              {' '}a{' '}
+              <span className="font-medium">
+                {Math.min(pagination.page * pagination.limit, pagination.total)}
+              </span>
+              {' '}de{' '}
+              <span className="font-medium">{pagination.total}</span>
+              {' '}resultados
+            </p>
+
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <button
+                  onClick={() => changePage(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-600">
+                  Página <span className="font-medium">{pagination.page}</span> de{' '}
+                  <span className="font-medium">{pagination.totalPages}</span>
+                </span>
+                <button
+                  onClick={() => changePage(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

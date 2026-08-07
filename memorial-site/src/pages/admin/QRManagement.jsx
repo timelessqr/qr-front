@@ -1,7 +1,7 @@
 // ====================================
 // src/pages/admin/QRManagement.jsx - Página de gestión de códigos QR
 // ====================================
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { qrService } from '../../services';
 
@@ -11,27 +11,70 @@ const QRManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+    search: ''
+  });
+  const paginationRef = useRef(pagination);
+  const latestRequestRef = useRef(0);
 
-  useEffect(() => {
-    loadQRData();
-  }, []);
+  const loadQRData = useCallback(async (params = {}) => {
+    const requestId = latestRequestRef.current + 1;
+    latestRequestRef.current = requestId;
 
-  const loadQRData = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Cargar todos los QRs
-      const qrData = await qrService.getAllQRs();
+      const currentPagination = paginationRef.current;
+      const requestParams = {
+        page: params.page ?? currentPagination.page,
+        limit: params.limit ?? currentPagination.limit,
+        search: params.search ?? currentPagination.search
+      };
+      const qrData = await qrService.getAllQRs(requestParams);
+
+      if (requestId !== latestRequestRef.current) {
+        return;
+      }
+
+      const nextPagination = {
+        page: Number(qrData.currentPage ?? requestParams.page),
+        limit: requestParams.limit,
+        total: Number(qrData.totalQRs ?? qrData.qrs?.length ?? 0),
+        totalPages: Number(qrData.totalPages ?? 0),
+        hasNext: qrData.hasNextPage ?? false,
+        hasPrev: qrData.hasPrevPage ?? requestParams.page > 1,
+        search: requestParams.search
+      };
+
       setQrs(qrData.qrs || []);
+      paginationRef.current = nextPagination;
+      setPagination(nextPagination);
 
     } catch (err) {
-      setError(err.message);
-      console.error('Error cargando datos QR:', err);
+      if (requestId === latestRequestRef.current) {
+        setError(err.message);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadQRData({ page: 1, search: searchTerm.trim() });
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, loadQRData]);
 
   const handleViewMemorial = (qrCode) => {
     // Abrir el memorial público en nueva pestaña
@@ -44,12 +87,11 @@ const QRManagement = () => {
     navigate(`/admin/memorials/${memorialId}/print-qr`);
   };
 
-  const filteredQRs = qrs.filter(qr => 
-    qr.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    qr.referencia?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const changePage = (newPage) => {
+    loadQRData({ page: newPage });
+  };
 
-  if (loading) {
+  if (loading && qrs.length === 0 && pagination.total === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="animate-pulse">
@@ -73,10 +115,13 @@ const QRManagement = () => {
           <p className="mt-1 text-sm text-gray-500">
             Administra todos los códigos QR de los memoriales digitales
           </p>
+          <p className="mt-2 text-sm font-medium text-gray-700">
+            {pagination.total} {pagination.total === 1 ? 'código QR activo' : 'códigos QR activos'}
+          </p>
         </div>
         <div className="mt-4 flex md:mt-0 md:ml-4">
           <button
-            onClick={loadQRData}
+            onClick={() => loadQRData()}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,6 +131,12 @@ const QRManagement = () => {
           </button>
         </div>
       </div>
+
+      {loading && (
+        <p className="mb-4 text-sm text-gray-500" aria-live="polite">
+          Cargando códigos QR...
+        </p>
+      )}
 
       {/* Error */}
       {error && (
@@ -128,7 +179,7 @@ const QRManagement = () => {
       {/* Lista de QRs */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
-          {filteredQRs.length === 0 ? (
+          {qrs.length === 0 ? (
             <li className="px-6 py-12 text-center">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
@@ -139,11 +190,11 @@ const QRManagement = () => {
               </p>
             </li>
           ) : (
-            filteredQRs.map((qr) => (
+            qrs.map((qr) => (
               <li key={qr.id || qr._id} className="hover:bg-gray-50 transition-colors duration-150">
                 <div className="px-6 py-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center flex-1">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start flex-1 sm:items-center">
                       <div className="flex-shrink-0">
                         <div className="h-16 w-16 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-gray-200">
                           <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +225,7 @@ const QRManagement = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3 ml-6">
+                    <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto sm:items-center sm:space-x-3 sm:ml-6">
                       <button
                         onClick={() => handleViewMemorial(qr.code)}
                         className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-colors duration-200"
@@ -204,6 +255,43 @@ const QRManagement = () => {
           )}
         </ul>
       </div>
+
+      {!loading && qrs.length > 0 && (
+        <div className="bg-white px-4 py-3 flex flex-col gap-3 border-t border-gray-200 sm:px-6 sm:flex-row sm:items-center sm:justify-between mt-6">
+          <p className="text-sm text-gray-700">
+            Mostrando{' '}
+            <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span>
+            {' '}a{' '}
+            <span className="font-medium">
+              {Math.min(pagination.page * pagination.limit, pagination.total)}
+            </span>
+            {' '}de <span className="font-medium">{pagination.total}</span> resultados
+          </p>
+
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 sm:justify-end">
+              <button
+                onClick={() => changePage(pagination.page - 1)}
+                disabled={!pagination.hasPrev}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <span className="text-sm text-gray-600">
+                Página <span className="font-medium">{pagination.page}</span> de{' '}
+                <span className="font-medium">{pagination.totalPages}</span>
+              </span>
+              <button
+                onClick={() => changePage(pagination.page + 1)}
+                disabled={!pagination.hasNext}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

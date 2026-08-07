@@ -5,9 +5,12 @@ import api, { handleApiError, getApiData } from './api';
 
 class MemorialService {
   // 📋 Obtener todos los memoriales/perfiles
-  async getMemorials() {
+  async getMemorials(params = {}) {
     try {
-      const response = await api.get('/profiles');
+      const { page = 1, limit = 20, search = '' } = params;
+      const response = await api.get('/profiles', {
+        params: { page, limit, search }
+      });
       return getApiData(response);
     } catch (error) {
       throw new Error(handleApiError(error));

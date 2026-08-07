@@ -33,25 +33,18 @@ const Dashboard = () => {
       // Cargar dashboard data del backend
       const data = await adminService.getDashboard();
       
-      // 🚨 DEBUG: Ver estructura de datos del backend
-      console.log('=== DEBUG Dashboard Data ===');
-      console.log('Data completa del backend:', data);
-      console.log('Estadísticas:', data.estadisticas);
-      console.log('Actividades:', data.actividades);
-      console.log('==========================');
-      
       // Mapear los datos del backend a la estructura del frontend
       const mappedData = {
         stats: {
           totalClients: data.estadisticas?.clientes?.total || 0,
           totalMemorials: data.estadisticas?.memoriales?.total || 0,
-          totalQRs: data.estadisticas?.memoriales?.total || 0, // Los QR se generan 1:1 con memoriales
+          totalQRs: data.estadisticas?.qrs?.total ?? data.estadisticas?.memoriales?.total ?? 0,
           clientsChange: `+${data.estadisticas?.clientes?.nuevosEsteMes || 0}`,
           memorialesChange: `+${data.estadisticas?.memoriales?.nuevosEsteMes || 0}`,
-          qrChange: `+${data.estadisticas?.memoriales?.nuevosEsteMes || 0}`, // Mismo que memoriales
+          qrChange: `+${data.estadisticas?.qrs?.nuevosEsteMes ?? data.estadisticas?.memoriales?.nuevosEsteMes ?? 0}`,
           clientsChangeType: (data.estadisticas?.clientes?.nuevosEsteMes || 0) > 0 ? 'positive' : 'neutral',
           memorialsChangeType: (data.estadisticas?.memoriales?.nuevosEsteMes || 0) > 0 ? 'positive' : 'neutral',
-          qrChangeType: (data.estadisticas?.memoriales?.nuevosEsteMes || 0) > 0 ? 'positive' : 'neutral'
+          qrChangeType: (data.estadisticas?.qrs?.nuevosEsteMes ?? data.estadisticas?.memoriales?.nuevosEsteMes ?? 0) > 0 ? 'positive' : 'neutral'
         },
         recentClients: data.actividades?.clientesRecientes || [],
         recentMemorials: data.actividades?.memorialesRecientes || []
@@ -68,13 +61,6 @@ const Dashboard = () => {
   };
 
   const handleQuickAction = (action, id = null) => {
-    // 🚨 DEBUG: Ver qué acción se está ejecutando
-    console.log('=== DEBUG handleQuickAction ===');
-    console.log('Action:', action);
-    console.log('ID recibido:', id);
-    console.log('Tipo de ID:', typeof id);
-    console.log('===============================');
-    
     switch (action) {
       case 'new-client':
         navigate('/admin/clients/new');

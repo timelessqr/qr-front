@@ -1,7 +1,7 @@
 // ====================================
 // src/components/admin/clients/ClientList.jsx - Lista de clientes
 // ====================================
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '../../../hooks';
 import ClientSearch from '../search/ClientSearch'; // ✅ Búsqueda simple
@@ -15,25 +15,16 @@ const ClientList = () => {
     pagination, 
     loadClients, 
     searchClients, 
-    deleteClient 
+    deleteClient,
+    changePage
   } = useClients();
-  
-  // DEBUG: Ver qué datos están llegando del backend
-  useEffect(() => {
-    if (clients.length > 0) {
-      console.log('=== CLIENTES CARGADOS ===');
-      console.log('Primer cliente:', clients[0]);
-      console.log('Campos disponibles:', Object.keys(clients[0]));
-      console.log('ID del primer cliente:', clients[0].id || clients[0]._id);
-    }
-  }, [clients]);
   
   // ✅ BÚSQUEDA SIMPLE: Solo manejar búsqueda por nombre (estabilizada)
   const handleSearch = useCallback((searchTerm) => {
     if (searchTerm && searchTerm.trim()) {
       searchClients(searchTerm);
     } else {
-      loadClients();
+      loadClients({ page: 1, search: '' });
     }
   }, [searchClients, loadClients]);
 
@@ -61,6 +52,11 @@ const ClientList = () => {
             <p className="mt-1 text-sm text-gray-500">
               Gestiona los clientes registrados en el sistema
             </p>
+            {!loading && (
+              <p className="mt-2 text-sm font-medium text-gray-700">
+                {pagination.total} {pagination.total === 1 ? 'cliente activo' : 'clientes activos'}
+              </p>
+            )}
           </div>
           <div className="mt-4 flex md:mt-0 md:ml-4">
             <button
@@ -130,8 +126,8 @@ const ClientList = () => {
               {clients.map((client) => (
                 <li key={client.id || client._id} className="hover:bg-gray-50 transition-colors duration-150">
                   <div className="px-6 py-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center flex-1">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start w-full sm:items-center sm:flex-1">
                         <div className="flex-shrink-0">
                           <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
                             <span className="text-white font-bold text-xl">
@@ -139,7 +135,7 @@ const ClientList = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="ml-6 flex-1">
+                        <div className="ml-4 min-w-0 flex-1 sm:ml-6">
                           <div className="flex items-center justify-between">
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900 mb-1">
@@ -163,7 +159,7 @@ const ClientList = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3 ml-6">
+                      <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto sm:items-center sm:space-x-3 sm:ml-6">
                         <button
                           onClick={() => {
                             const clientId = client.id || client._id;
@@ -238,44 +234,42 @@ const ClientList = () => {
         </div>
 
         {/* Paginación */}
-        {pagination.totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => changePage(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => changePage(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Siguiente
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Mostrando{' '}
-                  <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span>
-                  {' '}a{' '}
-                  <span className="font-medium">
-                    {Math.min(pagination.page * pagination.limit, pagination.total)}
-                  </span>
-                  {' '}de{' '}
-                  <span className="font-medium">{pagination.total}</span>
-                  {' '}resultados
-                </p>
+        {!loading && clients.length > 0 && (
+          <div className="bg-white px-4 py-3 flex flex-col gap-3 border-t border-gray-200 sm:px-6 sm:flex-row sm:items-center sm:justify-between mt-6">
+            <p className="text-sm text-gray-700">
+              Mostrando{' '}
+              <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span>
+              {' '}a{' '}
+              <span className="font-medium">
+                {Math.min(pagination.page * pagination.limit, pagination.total)}
+              </span>
+              {' '}de{' '}
+              <span className="font-medium">{pagination.total}</span>
+              {' '}resultados
+            </p>
+
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <button
+                  onClick={() => changePage(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-600">
+                  Página <span className="font-medium">{pagination.page}</span> de{' '}
+                  <span className="font-medium">{pagination.totalPages}</span>
+                </span>
+                <button
+                  onClick={() => changePage(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Siguiente
+                </button>
               </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  {/* Aquí puedes agregar números de página si quieres */}
-                </nav>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>
