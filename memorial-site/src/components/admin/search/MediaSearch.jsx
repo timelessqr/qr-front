@@ -1,18 +1,36 @@
 // ====================================
 // src/components/admin/search/MediaSearch.jsx
-// Búsqueda SIMPLE para media - solo selector de memorial
+// Búsqueda de memorial por nombre del memorial o del cliente
 // ====================================
 import React, { useState } from 'react';
 
-const MediaSearch = ({ onMemorialChange, memoriales, selectedMemorial }) => {
+const MediaSearch = ({ onMemorialChange, memoriales, clients, selectedMemorial }) => {
   const [memorialSearch, setMemorialSearch] = useState('');
+  const normalizedSearch = memorialSearch.trim().toLowerCase();
 
-  // Filter memoriales based on search
+  // Filtrar memoriales por nombre del memorial o del cliente asociado
   const filteredMemoriales = memoriales.filter(memorial => 
-    memorial.nombre.toLowerCase().includes(memorialSearch.toLowerCase()) ||
-    (memorial.cliente?.nombre || '').toLowerCase().includes(memorialSearch.toLowerCase()) ||
-    (memorial.cliente?.apellido || '').toLowerCase().includes(memorialSearch.toLowerCase())
+    (memorial.nombre || '').toLowerCase().includes(normalizedSearch) ||
+    (memorial.cliente?.nombre || memorial.client?.nombre || '').toLowerCase().includes(normalizedSearch) ||
+    (memorial.cliente?.apellido || memorial.client?.apellido || '').toLowerCase().includes(normalizedSearch)
   );
+
+  const memorialClientIds = new Set(
+    memoriales
+      .map(memorial => memorial.cliente?._id || memorial.client?._id || memorial.cliente || memorial.client)
+      .filter(Boolean)
+      .map(String)
+  );
+  const clientsWithoutMemorial = normalizedSearch
+    ? clients.filter(client => {
+        const fullName = `${client.nombre || ''} ${client.apellido || ''}`.trim().toLowerCase();
+        const matchesSearch = fullName.includes(normalizedSearch) ||
+          (client.codigoCliente || '').toLowerCase().includes(normalizedSearch);
+        const clientId = client._id || client.id;
+
+        return matchesSearch && clientId && !memorialClientIds.has(String(clientId));
+      })
+    : [];
 
   const clearMemorialSearch = () => {
     setMemorialSearch('');
@@ -23,7 +41,7 @@ const MediaSearch = ({ onMemorialChange, memoriales, selectedMemorial }) => {
       <label className="block text-sm font-medium text-gray-700 mb-2">
         Memorial Seleccionado
       </label>
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +50,7 @@ const MediaSearch = ({ onMemorialChange, memoriales, selectedMemorial }) => {
           </div>
           <input
             type="text"
-            placeholder="Buscar memorial..."
+            placeholder="Buscar memorial o cliente..."
             value={memorialSearch}
             onChange={(e) => setMemorialSearch(e.target.value)}
             className="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
@@ -57,7 +75,7 @@ const MediaSearch = ({ onMemorialChange, memoriales, selectedMemorial }) => {
               onMemorialChange(memorial);
             }
           }}
-          className="w-80 border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-sm"
+          className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-sm sm:w-80"
         >
           <option value="">Seleccionar memorial...</option>
           {filteredMemoriales.map(memorial => (
@@ -72,6 +90,23 @@ const MediaSearch = ({ onMemorialChange, memoriales, selectedMemorial }) => {
       {memorialSearch && (
         <div className="mt-2 text-sm text-gray-600">
           {filteredMemoriales.length} memorial{filteredMemoriales.length !== 1 ? 'es' : ''} encontrado{filteredMemoriales.length !== 1 ? 's' : ''}
+        </div>
+      )}
+
+      {clientsWithoutMemorial.length > 0 && (
+        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
+          {clientsWithoutMemorial.length === 1 ? (
+            <>
+              <span className="font-medium">
+                {clientsWithoutMemorial[0].nombre} {clientsWithoutMemorial[0].apellido}
+              </span>{' '}
+              existe como cliente, pero todavía no tiene un memorial asociado.
+            </>
+          ) : (
+            <>
+              {clientsWithoutMemorial.length} clientes coinciden con la búsqueda, pero todavía no tienen un memorial asociado.
+            </>
+          )}
         </div>
       )}
     </div>

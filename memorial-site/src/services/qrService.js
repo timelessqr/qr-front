@@ -15,9 +15,12 @@ class QRService {
   }
 
   // 📋 Obtener todos los QR
-  async getAllQRs() {
+  async getAllQRs(params = {}) {
     try {
-      const response = await api.get('/qr');
+      const { page = 1, limit = 20, search = '' } = params;
+      const response = await api.get('/qr', {
+        params: { page, limit, search }
+      });
       return getApiData(response);
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -96,7 +99,7 @@ class QRService {
     try {
       const response = await api.get(`/memorial/${qrCode}`);
       return !!getApiData(response);
-    } catch (error) {
+    } catch {
       return false;
     }
   }

@@ -30,7 +30,7 @@ const MemorialSearch = ({ onSearch }) => {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]); // Solo searchTerm - onSearch debe ser estable
+  }, [searchTerm, onSearch]);
 
   const clearSearch = () => {
     setSearchTerm('');

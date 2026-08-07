@@ -1,80 +1,91 @@
 // ====================================
 // src/hooks/useClients.js - Hook para gestión de clientes (CORREGIDO)
 // ====================================
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { clientService } from '../services';
+
+const createInitialPagination = () => ({
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 0,
+  hasNext: false,
+  hasPrev: false,
+  search: ''
+});
+
+const normalizePagination = (apiPagination = {}, requestParams, clientsCount) => {
+  const page = Number(apiPagination.currentPage ?? apiPagination.page ?? requestParams.page);
+  const limit = Number(apiPagination.itemsPerPage ?? apiPagination.limit ?? requestParams.limit);
+  const total = Number(apiPagination.totalItems ?? apiPagination.total ?? clientsCount);
+
+  return {
+    page,
+    limit,
+    total,
+    totalPages: Number(apiPagination.totalPages ?? Math.ceil(total / limit)),
+    hasNext: apiPagination.hasNext ?? apiPagination.hasNextPage ?? page * limit < total,
+    hasPrev: apiPagination.hasPrev ?? apiPagination.hasPrevPage ?? page > 1,
+    search: requestParams.search
+  };
+};
 
 export const useClients = (autoLoad = true) => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0
-  });
+  const [pagination, setPagination] = useState(createInitialPagination);
+  const paginationRef = useRef(createInitialPagination());
+  const latestRequestRef = useRef(0);
 
   // 🔧 MEMOIZAR: Cargar clientes con paginación
   const loadClients = useCallback(async (params = {}) => {
+    const requestId = latestRequestRef.current + 1;
+    latestRequestRef.current = requestId;
+
     try {
       setLoading(true);
       setError(null);
-      
+
+      const currentPagination = paginationRef.current;
       const requestParams = {
-        page: pagination.page,
-        limit: pagination.limit,
-        ...params
+        page: params.page ?? currentPagination.page,
+        limit: params.limit ?? currentPagination.limit,
+        search: params.search ?? currentPagination.search
       };
 
       const data = await clientService.getClients(requestParams);
-      
-      // 🚨 DEBUG: Ver estructura de datos del backend
-      console.log('=== DEBUG useClients loadClients ===');
-      console.log('Data recibida del service:', data);
-      console.log('¿Tiene data.clients?', !!data.clients);
-      console.log('¿Es data un array?', Array.isArray(data));
-      
-      // 🔧 FIX: Extraer clientes de forma inteligente
       const clientsArray = data.clients || data || [];
-      console.log('Clients array procesado:', clientsArray);
-      console.log('Primer cliente (si existe):', clientsArray[0]);
-      if (clientsArray[0]) {
-        console.log('Propiedades del primer cliente:', Object.keys(clientsArray[0]));
-        console.log('ID del primer cliente:', clientsArray[0].id || clientsArray[0]._id);
+
+      if (requestId !== latestRequestRef.current) {
+        return data;
       }
-      
+
+      const normalizedPagination = normalizePagination(
+        data.pagination,
+        requestParams,
+        clientsArray.length
+      );
+
       setClients(clientsArray);
-      setPagination(prev => ({
-        ...prev,
-        ...data.pagination,
-        ...params
-      }));
+      paginationRef.current = normalizedPagination;
+      setPagination(normalizedPagination);
 
       return data;
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestRef.current) {
+        setLoading(false);
+      }
     }
-  }, [pagination.page, pagination.limit]); // ✅ Solo dependencias necesarias
+  }, []);
 
   // 🔧 MEMOIZAR: Buscar clientes
   const searchClients = useCallback(async (query) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await clientService.searchClients(query);
-      setClients(data);
-      return data;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []); // ✅ Sin dependencias porque no usa state
+    return loadClients({ page: 1, search: query.trim() });
+  }, [loadClients]);
 
   // 🔧 MEMOIZAR: Crear cliente
   const createClient = useCallback(async (clientData) => {
@@ -105,7 +116,7 @@ export const useClients = (autoLoad = true) => {
       // Actualizar en la lista
       setClients(prev => 
         prev.map(client => 
-          client._id === clientId ? updatedClient : client
+          (client.id || client._id) === clientId ? updatedClient : client
         )
       );
       
@@ -126,7 +137,7 @@ export const useClients = (autoLoad = true) => {
       await clientService.deleteClient(clientId);
       
       // Remover de la lista
-      setClients(prev => prev.filter(client => client._id !== clientId));
+      setClients(prev => prev.filter(client => (client.id || client._id) !== clientId));
       
       return true;
     } catch (err) {
@@ -157,7 +168,7 @@ export const useClients = (autoLoad = true) => {
     if (autoLoad) {
       loadClients();
     }
-  }, [autoLoad]); // ✅ NO incluir loadClients aquí - solo autoLoad
+  }, [autoLoad, loadClients]);
 
   return {
     clients,
