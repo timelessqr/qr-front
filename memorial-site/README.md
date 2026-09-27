@@ -188,17 +188,8 @@ npm run dev
 
 ## 🔐 **AUTENTICACIÓN**
 
-### **Crear administrador:**
-```bash
-cd lazos-de-vida-backend
-node create-initial-admin.js
-```
-
-### **Credenciales por defecto:**
-- **Email**: `admin@lazosdevida.com`
-- **Password**: `admin123`
-
-**⚠️ Cambia estas credenciales en producción**
+El panel usa la cuenta de administrador que existe en la base del backend. Las
+credenciales no se guardan en el repo.
 
 ## 🧪 **TESTING**
 
