@@ -57,6 +57,14 @@ export const pergaminoAdmin = {
   obtenerFuneraria: (id) => privado.get(`/funerarias/${id}`).then(datos),
   crearFuneraria: (data) => privado.post('/funerarias', data).then(datos),
 
+  // Logo y colores: el backend los aplica a los pergaminos de las 4 salas
+  actualizarMarca: (funerariaId, data) => privado.put(`/funerarias/${funerariaId}/marca`, data).then(datos),
+  subirLogo: (funerariaId, archivo) => {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    return privado.post(`/funerarias/${funerariaId}/logo`, form).then(datos);
+  },
+
   // Salas (las 4 de la funeraria, con su QR y su pergamino)
   listarSalas: (funerariaId) => privado.get(`/funerarias/${funerariaId}/salas`).then(datos),
   obtenerSala: (salaId) => privado.get(`/salas/${salaId}`).then(datos),

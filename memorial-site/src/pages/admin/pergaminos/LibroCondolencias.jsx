@@ -57,6 +57,16 @@ const LibroCondolencias = () => {
         </p>
       </div>
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-md bg-white shadow px-5 py-4">
+        <p className="text-sm text-gray-600">
+          Descarga el libro con el pergamino de portada y todos los mensajes, para imprimirlo o guardarlo en PDF.
+        </p>
+        <a href={`/admin/pergaminos/salas/${salaId}/libro/descargar`} target="_blank" rel="noreferrer"
+          className={`${btn.primario} shrink-0`}>
+          Descargar libro
+        </a>
+      </div>
+
       {aviso && <Aviso tipo={aviso.tipo} onCerrar={() => setAviso(null)}>{aviso.texto}</Aviso>}
 
       <div className="bg-white shadow sm:rounded-md">

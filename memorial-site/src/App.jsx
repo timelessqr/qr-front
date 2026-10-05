@@ -28,6 +28,7 @@ import PergaminosSalas from './pages/admin/pergaminos/FunerariaSalas';
 import PergaminoEditor from './pages/admin/pergaminos/PergaminoEditor';
 import PergaminoLibro from './pages/admin/pergaminos/LibroCondolencias';
 import PergaminoImprimir from './pages/admin/pergaminos/ImprimirPergamino';
+import PergaminoDescargarLibro from './pages/admin/pergaminos/DescargarLibro';
 
 // Componentes del memorial original (para mantener compatibilidad)
 import Banner from './components/Banner';
@@ -137,6 +138,10 @@ function App() {
             <Route
               path="/admin/pergaminos/salas/:salaId/imprimir"
               element={<ProtectedRoute><PergaminoImprimir /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/pergaminos/salas/:salaId/libro/descargar"
+              element={<ProtectedRoute><PergaminoDescargarLibro /></ProtectedRoute>}
             />
 
             {/* Rutas administrativas protegidas */}
