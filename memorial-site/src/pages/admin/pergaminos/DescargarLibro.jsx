@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { pergaminoAdmin } from '../../../services/pergaminoService';
 import PergaminoView from '../../../components/pergamino/PergaminoView';
+import { ajustarAHoja, imprimirCuandoCargue } from '../../../components/pergamino/imprimir';
 import { Cargando, Aviso, useCarga } from '../../../components/admin/pergaminos/ui';
 
 const fecha = (iso) => new Date(iso).toLocaleDateString('es-CL', {
@@ -32,11 +33,7 @@ const DescargarLibro = () => {
     const tituloAnterior = document.title;
     // El navegador usa el título como nombre del PDF
     document.title = `Libro de condolencias - ${nombre || 'Pergamino'}`;
-    const pendientes = [...document.images].filter((img) => !img.complete);
-    Promise.all([
-      document.fonts?.ready,
-      ...pendientes.map((img) => new Promise((ok) => { img.onload = ok; img.onerror = ok; })),
-    ]).then(() => window.print());
+    imprimirCuandoCargue();
     return () => { document.title = tituloAnterior; };
   }, [datos, nombre]);
 
@@ -52,7 +49,7 @@ const DescargarLibro = () => {
     <div className="libro-impresion min-h-screen bg-white py-8 print:py-0">
       <p className="text-center text-sm text-gray-500 mb-6 print:hidden">
         Para guardarlo como archivo, elige «Guardar como PDF» en el diálogo de impresión.
-        Si no se abrió, <button className="text-red-600 underline" onClick={() => window.print()}>ábrelo desde aquí</button>.
+        Si no se abrió, <button className="text-red-600 underline" onClick={() => { ajustarAHoja(); window.print(); }}>ábrelo desde aquí</button>.
       </p>
 
       {/* Portada */}

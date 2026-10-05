@@ -173,7 +173,7 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
         {/* Sello de agua: el logo de la funeraria, tenue, detrás del contenido */}
         {logo && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden" aria-hidden>
-            <img src={urlArchivo(logo)} alt="" className="pergamino-sello w-3/5 max-h-[45%] object-contain opacity-[0.1]" />
+            <img src={urlArchivo(logo)} alt="" className="pergamino-sello w-3/5 max-h-[40%] object-contain opacity-[0.1] grayscale mix-blend-multiply" />
           </div>
         )}
         {/* Filete interior, como el borde impreso de una esquela */}

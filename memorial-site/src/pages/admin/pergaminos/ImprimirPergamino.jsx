@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { pergaminoAdmin } from '../../../services/pergaminoService';
 import PergaminoView from '../../../components/pergamino/PergaminoView';
+import { ajustarAHoja, imprimirCuandoCargue } from '../../../components/pergamino/imprimir';
 import { Cargando, Aviso, useCarga } from '../../../components/admin/pergaminos/ui';
 
 const ImprimirPergamino = () => {
@@ -15,12 +16,8 @@ const ImprimirPergamino = () => {
 
   useEffect(() => {
     if (!datos) return;
-    // Esperar a que carguen la foto y la tipografía antes de imprimir
-    const imagenes = [...document.images].filter((img) => !img.complete);
-    Promise.all([
-      document.fonts?.ready,
-      ...imagenes.map((img) => new Promise((ok) => { img.onload = ok; img.onerror = ok; })),
-    ]).then(() => window.print());
+    // Esperar a que carguen la foto y la tipografía, y que entre en una hoja
+    imprimirCuandoCargue();
   }, [datos]);
 
   if (cargando) return <Cargando texto="Preparando impresión..." />;
@@ -29,7 +26,7 @@ const ImprimirPergamino = () => {
   return (
     <div className="pergamino-impresion min-h-screen bg-white py-8 print:py-0">
       <p className="text-center text-sm text-gray-500 mb-6 print:hidden">
-        Si no se abrió el diálogo, <button className="text-red-600 underline" onClick={() => window.print()}>imprime desde aquí</button>.
+        Si no se abrió el diálogo, <button className="text-red-600 underline" onClick={() => { ajustarAHoja(); window.print(); }}>imprime desde aquí</button>.
       </p>
       <PergaminoView pergamino={datos} />
     </div>
