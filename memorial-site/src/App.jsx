@@ -9,6 +9,7 @@ import AdminLayout from './components/admin/layout/AdminLayout';
 
 // Páginas públicas
 import Memorial from './pages/Memorial';
+import Pergamino from './pages/Pergamino';
 
 // Páginas administrativas
 import LoginPage from './pages/admin/Login';
@@ -22,6 +23,11 @@ import PrintQRPage from './pages/admin/PrintQR';
 import MemorialComentarios from './pages/admin/MemorialComentarios';
 import QRManagement from './pages/admin/QRManagement';
 import MediaManagement from './pages/admin/MediaManagement';
+import PergaminosFunerarias from './pages/admin/pergaminos/Funerarias';
+import PergaminosSalas from './pages/admin/pergaminos/FunerariaSalas';
+import PergaminoEditor from './pages/admin/pergaminos/PergaminoEditor';
+import PergaminoLibro from './pages/admin/pergaminos/LibroCondolencias';
+import PergaminoImprimir from './pages/admin/pergaminos/ImprimirPergamino';
 
 // Componentes del memorial original (para mantener compatibilidad)
 import Banner from './components/Banner';
@@ -45,8 +51,8 @@ const BodyClassManager = () => {
     // Limpiar clases anteriores
     body.classList.remove('admin-layout', 'default-layout');
     
-    // Aplicar clase según la ruta
-    if (location.pathname.startsWith('/admin')) {
+    // Aplicar clase según la ruta (el pergamino público ocupa todo el ancho, como el admin)
+    if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/pergamino')) {
       body.classList.add('admin-layout');
     } else {
       body.classList.add('default-layout');
@@ -120,10 +126,19 @@ function App() {
             
             {/* Rutas públicas de memoriales */}
             <Route path="/memorial/:qrCode" element={<Memorial />} />
+
+            {/* Pergamino de una sala de funeraria (lo que abre su QR) */}
+            <Route path="/pergamino/:code" element={<Pergamino />} />
             
             {/* Ruta de login administrativo */}
             <Route path="/admin/login" element={<LoginPage />} />
             
+            {/* Hoja para imprimir el pergamino: protegida, pero sin el menú del admin */}
+            <Route
+              path="/admin/pergaminos/salas/:salaId/imprimir"
+              element={<ProtectedRoute><PergaminoImprimir /></ProtectedRoute>}
+            />
+
             {/* Rutas administrativas protegidas */}
             <Route
               path="/admin/*"
@@ -152,6 +167,12 @@ function App() {
               {/* Gestión de Media */}
               <Route path="media" element={<MediaManagement />} />
               
+              {/* Pergaminos de funerarias (backend lazos-pergamino) */}
+              <Route path="pergaminos" element={<PergaminosFunerarias />} />
+              <Route path="pergaminos/funerarias/:funerariaId" element={<PergaminosSalas />} />
+              <Route path="pergaminos/salas/:salaId" element={<PergaminoEditor />} />
+              <Route path="pergaminos/salas/:salaId/libro" element={<PergaminoLibro />} />
+
               {/* Gestión de QR */}
               <Route path="qr-codes" element={<QRManagement />} />
               

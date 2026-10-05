@@ -74,3 +74,15 @@
     background-clip: text;
   }
 }
+
+/* Impresión del pergamino: solo la hoja, sin sombras ni fondo de pantalla */
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  .pergamino-impresion { min-height: auto; }
+  .pergamino-hoja {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    break-inside: avoid;
+  }
+}
