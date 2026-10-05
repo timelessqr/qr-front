@@ -93,6 +93,9 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
     .filter((s) => s.visible !== false)
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
   const textoPie = pergamino.pie?.texto || funeraria?.nombre;
+  const logo = pergamino.pie?.mostrarLogo === false
+    ? null
+    : pergamino.pie?.logoUrl || funeraria?.branding?.logoUrl;
 
   const variables = {
     '--perg-primario': estilos.colorPrimario || '#8C7B5A',
@@ -145,12 +148,12 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
         </div>
       </section>
     ) : null,
-    pie_funeraria: textoPie ? (
+    pie_funeraria: textoPie || logo ? (
       <footer key="pie" className="pt-4 border-t text-center" style={{ borderColor: 'var(--perg-linea)' }}>
-        {pergamino.pie?.mostrarLogo !== false && pergamino.pie?.logoUrl && (
-          <img src={urlArchivo(pergamino.pie.logoUrl)} alt="" className="mx-auto h-10 mb-2 object-contain" />
+        {logo && (
+          <img src={urlArchivo(logo)} alt="" className="mx-auto h-12 max-w-[60%] mb-2 object-contain" />
         )}
-        <p className="text-xs tracking-[0.25em]" style={{ color: 'var(--perg-primario)' }}>{textoPie}</p>
+        {textoPie && <p className="text-xs tracking-[0.25em]" style={{ color: 'var(--perg-primario)' }}>{textoPie}</p>}
       </footer>
     ) : null,
   };
@@ -167,6 +170,12 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
           boxShadow: '0 1px 2px rgba(60,50,30,.12), 0 12px 32px -12px rgba(60,50,30,.35)',
         }}
       >
+        {/* Sello de agua: el logo de la funeraria, tenue, detrás del contenido */}
+        {logo && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden" aria-hidden>
+            <img src={urlArchivo(logo)} alt="" className="pergamino-sello w-3/5 max-h-[45%] object-contain opacity-[0.1]" />
+          </div>
+        )}
         {/* Filete interior, como el borde impreso de una esquela */}
         <div className="pointer-events-none absolute inset-3 sm:inset-4 border" style={{ borderColor: 'var(--perg-linea)' }} />
         <div className="relative space-y-7">

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { pergaminoAdmin } from '../../../services/pergaminoService';
 import { btn, Cargando, Aviso, EstadoPergamino, useCarga } from '../../../components/admin/pergaminos/ui';
+import MarcaFuneraria from '../../../components/admin/pergaminos/MarcaFuneraria';
 
 const QRSala = ({ sala }) => {
   const [dataUrl, setDataUrl] = useState(null);
@@ -94,6 +95,7 @@ const FunerariaSalas = () => {
           {[funeraria?.codigo, funeraria?.direccion, funeraria?.ciudad, funeraria?.telefono].filter(Boolean).join(' · ')}
         </p>
       </div>
+      <MarcaFuneraria key={funeraria?.id} funeraria={funeraria} />
       <p className="text-sm text-gray-600">
         Cada sala tiene un QR fijo: se imprime una vez y se cuelga en la sala. Entre un servicio y otro
         solo cambia el pergamino.

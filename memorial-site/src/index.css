@@ -85,4 +85,8 @@
     print-color-adjust: exact;
     break-inside: avoid;
   }
+  .pergamino-sello { opacity: 0.1 !important; }
+  /* Libro: la portada en su propia hoja y ningún mensaje partido entre dos */
+  .libro-impresion .libro-mensajes { break-before: page; margin-top: 0; }
+  .libro-mensaje { break-inside: avoid; }
 }
