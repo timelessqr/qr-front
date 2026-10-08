@@ -81,7 +81,21 @@ const Servicio = ({ servicio }) => {
   );
 };
 
-const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
+// Colores del pergamino como variables CSS (también los usan las hojas A4)
+export const variablesPergamino = (estilos = {}) => ({
+  '--perg-primario': estilos.colorPrimario || '#8C7B5A',
+  '--perg-texto': estilos.colorTexto || '#4A443B',
+  '--perg-fondo': estilos.colorFondo || '#F4F1E8',
+  '--perg-linea': 'rgba(140, 123, 90, 0.35)',
+});
+
+export const logoPergamino = (pergamino, funeraria) => (pergamino?.pie?.mostrarLogo === false
+  ? null
+  : pergamino?.pie?.logoUrl || funeraria?.branding?.logoUrl || null);
+
+// plano: solo el contenido, sin el papel, el filete, el sello ni el pie.
+// Lo usa la hoja A4 de impresión, que pone esas partes por su cuenta.
+const PergaminoView = ({ pergamino, funeraria, className = '', plano = false }) => {
   if (!pergamino) return null;
 
   const estilos = pergamino.estilos || {};
@@ -93,16 +107,8 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
     .filter((s) => s.visible !== false)
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
   const textoPie = pergamino.pie?.texto || funeraria?.nombre;
-  const logo = pergamino.pie?.mostrarLogo === false
-    ? null
-    : pergamino.pie?.logoUrl || funeraria?.branding?.logoUrl;
-
-  const variables = {
-    '--perg-primario': estilos.colorPrimario || '#8C7B5A',
-    '--perg-texto': estilos.colorTexto || '#4A443B',
-    '--perg-fondo': estilos.colorFondo || '#F4F1E8',
-    '--perg-linea': 'rgba(140, 123, 90, 0.35)',
-  };
+  const logo = logoPergamino(pergamino, funeraria);
+  const variables = variablesPergamino(estilos);
 
   const bloques = {
     encabezado: (
@@ -158,6 +164,19 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
     ) : null,
   };
 
+  const contenido = ordenSecciones(pergamino.secciones)
+    .filter((s) => !(plano && s.key === 'pie_funeraria'))
+    .map((s) => bloques[s.key])
+    .filter(Boolean);
+
+  if (plano) {
+    return (
+      <article className={`pergamino font-serif text-left ${className}`} style={{ ...variables, color: 'var(--perg-texto)' }}>
+        <div className="space-y-7">{contenido}</div>
+      </article>
+    );
+  }
+
   return (
     <article
       className={`pergamino font-serif text-left ${className}`}
@@ -179,7 +198,7 @@ const PergaminoView = ({ pergamino, funeraria, className = '' }) => {
         {/* Filete interior, como el borde impreso de una esquela */}
         <div className="pointer-events-none absolute inset-3 sm:inset-4 border" style={{ borderColor: 'var(--perg-linea)' }} />
         <div className="relative space-y-7">
-          {ordenSecciones(pergamino.secciones).map((s) => bloques[s.key]).filter(Boolean)}
+          {contenido}
         </div>
       </div>
     </article>

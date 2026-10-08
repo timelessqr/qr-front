@@ -1,34 +1,29 @@
 // ====================================
 // src/pages/admin/pergaminos/ImprimirPergamino.jsx - Hoja para imprimir
 // ====================================
-// Solo el pergamino con su información: sin comentarios del libro y sin el
-// menú del admin. Abre el diálogo de impresión apenas carga.
-import React, { useEffect } from 'react';
+// Solo el pergamino con su información, en una A4 color pergamino: sin
+// comentarios del libro y sin el menú del admin. Abre el diálogo de impresión.
+import React, { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { pergaminoAdmin } from '../../../services/pergaminoService';
-import PergaminoView from '../../../components/pergamino/PergaminoView';
-import { ajustarAHoja, imprimirCuandoCargue } from '../../../components/pergamino/imprimir';
+import HojasPergamino from '../../../components/pergamino/HojasPergamino';
+import { imprimir } from '../../../components/pergamino/imprimir';
 import { Cargando, Aviso, useCarga } from '../../../components/admin/pergaminos/ui';
 
 const ImprimirPergamino = () => {
   const { salaId } = useParams();
   const { datos, cargando, error } = useCarga(() => pergaminoAdmin.obtenerPergamino(salaId), [salaId]);
-
-  useEffect(() => {
-    if (!datos) return;
-    // Esperar a que carguen la foto y la tipografía, y que entre en una hoja
-    imprimirCuandoCargue();
-  }, [datos]);
+  const listo = useCallback(() => imprimir(), []);
 
   if (cargando) return <Cargando texto="Preparando impresión..." />;
   if (error) return <div className="p-6"><Aviso>{error}</Aviso></div>;
 
   return (
-    <div className="pergamino-impresion min-h-screen bg-white py-8 print:py-0">
-      <p className="text-center text-sm text-gray-500 mb-6 print:hidden">
-        Si no se abrió el diálogo, <button className="text-red-600 underline" onClick={() => { ajustarAHoja(); window.print(); }}>imprime desde aquí</button>.
+    <div className="min-h-screen bg-stone-200 print:bg-transparent">
+      <p className="pt-4 text-center text-sm text-gray-600 print:hidden">
+        Si no se abrió el diálogo, <button className="text-red-600 underline" onClick={() => window.print()}>imprime desde aquí</button>.
       </p>
-      <PergaminoView pergamino={datos} />
+      <HojasPergamino pergamino={datos} onListo={listo} />
     </div>
   );
 };

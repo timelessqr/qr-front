@@ -75,18 +75,22 @@
   }
 }
 
-/* Impresión del pergamino: solo la hoja, sin sombras ni fondo de pantalla */
+/* Hojas A4 del pergamino y del libro (HojasPergamino.jsx) */
+@media screen {
+  .hojas-pergamino { padding: 24px 12px; }
+  .hoja-a4 { margin-bottom: 24px; box-shadow: 0 1px 2px rgba(60,50,30,.12), 0 12px 32px -12px rgba(60,50,30,.35); }
+}
+
+/* Impresión: margen 0 para que el navegador no imprima fecha, título ni URL.
+   Cada .hoja-a4 ocupa una página entera. */
 @media print {
-  @page { size: A4 portrait; margin: 12mm; }
-  .pergamino-impresion { min-height: auto; }
-  .pergamino-hoja {
-    box-shadow: none !important;
+  @page { size: A4 portrait; margin: 0; }
+  html, body { margin: 0 !important; padding: 0 !important; background: none !important; }
+  .hoja-a4 {
+    break-after: page;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    break-inside: avoid;
   }
+  .hoja-a4:last-of-type { break-after: auto; }
   .pergamino-sello { opacity: 0.1 !important; }
-  /* Libro: la portada en su propia hoja y ningún mensaje partido entre dos */
-  .libro-impresion .libro-mensajes { break-before: page; margin-top: 0; }
-  .libro-mensaje { break-inside: avoid; }
 }

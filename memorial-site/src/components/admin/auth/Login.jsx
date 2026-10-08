@@ -16,6 +16,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [verPassword, setVerPassword] = useState(false);
 
   // Si ya está autenticado, redirigir al dashboard
   if (isAuthenticated && !authLoading) {
@@ -121,10 +122,11 @@ const Login = () => {
               <label htmlFor="password" className="sr-only">
                 Contraseña
               </label>
+              <div className="relative">
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={verPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
                 value={formData.password}
@@ -132,6 +134,15 @@ const Login = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                 placeholder="Contraseña"
               />
+              <button
+                type="button"
+                onClick={() => setVerPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 z-20 px-3 text-xs font-medium text-gray-500 hover:text-gray-800"
+                aria-label={verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {verPassword ? 'Ocultar' : 'Mostrar'}
+              </button>
+              </div>
             </div>
           </div>
 
