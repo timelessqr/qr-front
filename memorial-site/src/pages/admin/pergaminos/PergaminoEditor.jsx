@@ -8,6 +8,7 @@ import PergaminoView from '../../../components/pergamino/PergaminoView';
 import {
   btn, input, Campo, Cargando, Aviso, Confirmar, EstadoPergamino, useCarga,
 } from '../../../components/admin/pergaminos/ui';
+import { useRutasPergamino } from '../../../components/admin/pergaminos/rutas';
 
 const CAMPOS_SERVICIO = ['_id', 'tipo', 'titulo', 'icono', 'fechaTexto', 'horaTexto', 'lugar', 'direccion', 'orden', 'visible'];
 
@@ -80,6 +81,7 @@ const EditorServicio = ({ servicio, opciones, onCambio, onQuitar, onSubir, onBaj
 
 const PergaminoEditor = () => {
   const { salaId } = useParams();
+  const rutas = useRutasPergamino();
   const { datos, cargando, error, recargar } = useCarga(async () => {
     const [sala, pergamino, opciones] = await Promise.all([
       pergaminoAdmin.obtenerSala(salaId),
@@ -160,7 +162,7 @@ const PergaminoEditor = () => {
   const imprimir = async () => {
     if (sinGuardar && !(await correr('guardar', () => pergaminoAdmin.actualizarPergamino(pergamino.id, aPayload(form)), 'Cambios guardados'))) return;
     setOriginal(JSON.stringify(form));
-    window.open(`/admin/pergaminos/salas/${salaId}/imprimir`, '_blank');
+    window.open(rutas.imprimir(salaId), '_blank');
   };
 
   const subirFoto = async (e) => {
@@ -185,7 +187,7 @@ const PergaminoEditor = () => {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <Link to={`/admin/pergaminos/funerarias/${sala.funeraria}`} className="text-sm text-gray-500 hover:text-gray-700">← Salas</Link>
+          <Link to={rutas.salas(sala.funeraria)} className="text-sm text-gray-500 hover:text-gray-700">← Salas</Link>
           <h2 className="mt-2 text-2xl font-bold text-gray-900 flex items-center gap-3">
             {sala.nombre} <EstadoPergamino estado={pergamino.estado} />
           </h2>

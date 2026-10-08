@@ -30,6 +30,11 @@ import PergaminoLibro from './pages/admin/pergaminos/LibroCondolencias';
 import PergaminoImprimir from './pages/admin/pergaminos/ImprimirPergamino';
 import PergaminoDescargarLibro from './pages/admin/pergaminos/DescargarLibro';
 
+// Módulo aislado de las cuentas de funeraria
+import RutaFuneraria from './components/funeraria/RutaFuneraria';
+import FunerariaLayout from './components/funeraria/FunerariaLayout';
+import MiCuentaFuneraria from './pages/funeraria/MiCuenta';
+
 // Componentes del memorial original (para mantener compatibilidad)
 import Banner from './components/Banner';
 import Footer from './components/Footer';
@@ -53,7 +58,7 @@ const BodyClassManager = () => {
     body.classList.remove('admin-layout', 'default-layout');
     
     // Aplicar clase según la ruta (el pergamino público ocupa todo el ancho, como el admin)
-    if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/pergamino')) {
+    if (['/admin', '/pergamino', '/funeraria'].some((p) => location.pathname.startsWith(p))) {
       body.classList.add('admin-layout');
     } else {
       body.classList.add('default-layout');
@@ -143,6 +148,17 @@ function App() {
               path="/admin/pergaminos/salas/:salaId/libro/descargar"
               element={<ProtectedRoute><PergaminoDescargarLibro /></ProtectedRoute>}
             />
+
+            {/* Módulo de una funeraria: solo sus salas, con su propio login */}
+            <Route path="/funeraria/salas/:salaId/imprimir" element={<RutaFuneraria><PergaminoImprimir /></RutaFuneraria>} />
+            <Route path="/funeraria/salas/:salaId/libro/descargar" element={<RutaFuneraria><PergaminoDescargarLibro /></RutaFuneraria>} />
+            <Route path="/funeraria" element={<RutaFuneraria><FunerariaLayout /></RutaFuneraria>}>
+              <Route index element={<PergaminosSalas />} />
+              <Route path="salas/:salaId" element={<PergaminoEditor />} />
+              <Route path="salas/:salaId/libro" element={<PergaminoLibro />} />
+              <Route path="cuenta" element={<MiCuentaFuneraria />} />
+              <Route path="*" element={<Navigate to="/funeraria" replace />} />
+            </Route>
 
             {/* Rutas administrativas protegidas */}
             <Route

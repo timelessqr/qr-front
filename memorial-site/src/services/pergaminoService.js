@@ -21,8 +21,14 @@ const TIMEOUT = 70000;
 
 const privado = axios.create({ baseURL: PERGAMINO_API_URL, timeout: TIMEOUT });
 
+// En /funeraria/... viaja el token de la cuenta de funeraria; en el admin, el de core-qr
+const enModuloFuneraria = () => {
+  const ruta = window.location.pathname;
+  return ruta === '/funeraria' || ruta.startsWith('/funeraria/');
+};
+
 privado.interceptors.request.use((config) => {
-  const token = localStorage.getItem('admin_token');
+  const token = localStorage.getItem(enModuloFuneraria() ? 'funeraria_token' : 'admin_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -30,11 +36,16 @@ privado.interceptors.request.use((config) => {
 privado.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 401 = token vencido o inválido: mismo comportamiento que el resto del admin.
-    // 403 = el usuario no tiene acceso a pergaminos; no se cierra la sesión.
+    // 401 = token vencido o inválido: se cierra esa sesión y se vuelve al login.
+    // 403 = sin acceso a ese recurso; la sesión sigue.
     if (error.response?.status === 401) {
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
+      if (enModuloFuneraria()) {
+        localStorage.removeItem('funeraria_token');
+        localStorage.removeItem('funeraria_sesion');
+      } else {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+      }
       window.location.href = '/admin/login';
     }
     return Promise.reject(error);
@@ -90,6 +101,16 @@ export const pergaminoAdmin = {
   listarCondolencias: (salaId, params) =>
     privado.get(`/condolencias/sala/${salaId}`, { params }).then(datos),
   borrarCondolencia: (id) => privado.delete(`/condolencias/${id}`).then(datos),
+
+  // Cuentas de funeraria (solo superadmin)
+  listarCuentas: (funerariaId) => privado.get(`/funerarias/${funerariaId}/cuentas`).then(datos),
+  crearCuenta: (funerariaId, data) => privado.post(`/funerarias/${funerariaId}/cuentas`, data).then(datos),
+  actualizarCuenta: (id, data) => privado.put(`/cuentas/${id}`, data).then(datos),
+  restablecerPassword: (id, password) => privado.post(`/cuentas/${id}/password`, { password }).then(datos),
+
+  // La cuenta de funeraria logueada
+  yo: () => privado.get('/auth/yo').then(datos),
+  cambiarPassword: (actual, nueva) => privado.put('/auth/password', { actual, nueva }).then(datos),
 };
 
 export const pergaminoPublico = {
