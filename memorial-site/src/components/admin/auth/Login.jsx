@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks';
+import { funerariaSesion } from '../../../services/funerariaSesion';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,6 +20,11 @@ const Login = () => {
   // Si ya está autenticado, redirigir al dashboard
   if (isAuthenticated && !authLoading) {
     return <Navigate to="/admin" replace />;
+  }
+
+  // Una cuenta de funeraria con sesión abierta va a su módulo
+  if (!authLoading && funerariaSesion.activa()) {
+    return <Navigate to="/funeraria" replace />;
   }
 
   const handleChange = (e) => {
@@ -39,16 +45,28 @@ const Login = () => {
       return;
     }
 
+    setLoading(true);
+    setError('');
+
+    // Un solo login para todos: primero el admin de Lazos (core-qr), como
+    // siempre. Si ahí no existe, se prueba como cuenta de funeraria (backend de
+    // pergaminos) y esa cuenta entra a su módulo aislado.
     try {
-      setLoading(true);
-      setError('');
-      
       await login(formData);
-      
-      // Redirigir al dashboard
       navigate('/admin', { replace: true });
+      return;
+    } catch {
+      // no es admin de Lazos: se prueba como funeraria
+    }
+
+    try {
+      await funerariaSesion.login(formData.email, formData.password);
+      navigate('/funeraria', { replace: true });
     } catch (err) {
-      setError(err.message || 'Error al iniciar sesión');
+      const status = err.response?.status;
+      setError(status === 401 || status === 400
+        ? (err.response?.data?.message || 'Email o contraseña incorrectos')
+        : err.response?.data?.message || 'No se pudo iniciar sesión, intenta de nuevo');
     } finally {
       setLoading(false);
     }

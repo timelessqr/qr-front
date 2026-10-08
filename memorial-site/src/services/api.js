@@ -40,8 +40,9 @@ api.interceptors.response.use(
   (error) => {
     console.error('❌ Response Error:', error.response?.data || error.message);
     
-    // Si el token expiró, redirigir a login
-    if (error.response?.status === 401) {
+    // Si el token expiró, redirigir a login. En el propio login un 401 es
+    // "credenciales incorrectas": no se recarga, así el formulario muestra el error
+    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
       window.location.href = '/admin/login';

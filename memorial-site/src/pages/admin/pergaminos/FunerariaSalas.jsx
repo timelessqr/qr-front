@@ -6,6 +6,9 @@ import { Link, useParams } from 'react-router-dom';
 import { pergaminoAdmin } from '../../../services/pergaminoService';
 import { btn, Cargando, Aviso, EstadoPergamino, useCarga } from '../../../components/admin/pergaminos/ui';
 import MarcaFuneraria from '../../../components/admin/pergaminos/MarcaFuneraria';
+import CuentasFuneraria from '../../../components/admin/pergaminos/CuentasFuneraria';
+import { useRutasPergamino } from '../../../components/admin/pergaminos/rutas';
+import { funerariaSesion } from '../../../services/funerariaSesion';
 
 const QRSala = ({ sala }) => {
   const [dataUrl, setDataUrl] = useState(null);
@@ -38,6 +41,7 @@ const QRSala = ({ sala }) => {
 };
 
 const TarjetaSala = ({ sala }) => {
+  const rutas = useRutasPergamino();
   const p = sala.pergamino || {};
   const nombre = [p.difunto?.nombre, p.difunto?.apellido].filter(Boolean).join(' ');
   const libro = sala.libroCondolencias || {};
@@ -63,8 +67,8 @@ const TarjetaSala = ({ sala }) => {
           </a>
         )}
         <div className="mt-auto pt-4 flex flex-wrap gap-2">
-          <Link to={`/admin/pergaminos/salas/${sala.id}`} className={btn.primario}>Editar pergamino</Link>
-          <Link to={`/admin/pergaminos/salas/${sala.id}/libro`} className={btn.secundario}>Libro de condolencias</Link>
+          <Link to={rutas.sala(sala.id)} className={btn.primario}>Editar pergamino</Link>
+          <Link to={rutas.libro(sala.id)} className={btn.secundario}>Libro de condolencias</Link>
         </div>
       </div>
     </div>
@@ -72,7 +76,10 @@ const TarjetaSala = ({ sala }) => {
 };
 
 const FunerariaSalas = () => {
-  const { funerariaId } = useParams();
+  const rutas = useRutasPergamino();
+  const params = useParams();
+  // En el módulo de la funeraria, la funeraria es la de la sesión, no la de la URL
+  const funerariaId = rutas.esFuneraria ? funerariaSesion.datos()?.funeraria?.id : params.funerariaId;
   const { datos, cargando, error, recargar } = useCarga(async () => {
     const [funeraria, salas] = await Promise.all([
       pergaminoAdmin.obtenerFuneraria(funerariaId),
@@ -89,13 +96,16 @@ const FunerariaSalas = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
-        <Link to="/admin/pergaminos" className="text-sm text-gray-500 hover:text-gray-700">← Funerarias</Link>
+        {!rutas.esFuneraria && (
+          <Link to="/admin/pergaminos" className="text-sm text-gray-500 hover:text-gray-700">← Funerarias</Link>
+        )}
         <h2 className="mt-2 text-2xl font-bold text-gray-900">{funeraria?.nombre}</h2>
         <p className="mt-1 text-sm text-gray-500">
           {[funeraria?.codigo, funeraria?.direccion, funeraria?.ciudad, funeraria?.telefono].filter(Boolean).join(' · ')}
         </p>
       </div>
       <MarcaFuneraria key={funeraria?.id} funeraria={funeraria} />
+      {!rutas.esFuneraria && <CuentasFuneraria funeraria={funeraria} />}
       <p className="text-sm text-gray-600">
         Cada sala tiene un QR fijo: se imprime una vez y se cuelga en la sala. Entre un servicio y otro
         solo cambia el pergamino.

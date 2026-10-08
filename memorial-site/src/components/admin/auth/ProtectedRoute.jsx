@@ -4,6 +4,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../hooks';
+import { funerariaSesion } from '../../../services/funerariaSesion';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -19,6 +20,11 @@ const ProtectedRoute = ({ children }) => {
         </div>
       </div>
     );
+  }
+
+  // Una cuenta de funeraria no entra al admin: vuelve a su módulo
+  if (!isAuthenticated && funerariaSesion.activa()) {
+    return <Navigate to="/funeraria" replace />;
   }
 
   // Si no está autenticado, redirigir a login

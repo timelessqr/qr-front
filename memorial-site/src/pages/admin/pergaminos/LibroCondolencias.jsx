@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { pergaminoAdmin, mensajeError } from '../../../services/pergaminoService';
 import { btn, Cargando, Aviso, Confirmar, useCarga } from '../../../components/admin/pergaminos/ui';
+import { useRutasPergamino } from '../../../components/admin/pergaminos/rutas';
 
 const fecha = (iso) => new Date(iso).toLocaleString('es-CL', {
   day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -13,6 +14,7 @@ const fecha = (iso) => new Date(iso).toLocaleString('es-CL', {
 
 const LibroCondolencias = () => {
   const { salaId } = useParams();
+  const rutas = useRutasPergamino();
   const [aBorrar, setABorrar] = useState(null);
   const [borrando, setBorrando] = useState(false);
   const [aviso, setAviso] = useState(null);
@@ -49,7 +51,7 @@ const LibroCondolencias = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <Link to={`/admin/pergaminos/funerarias/${sala.funeraria}`} className="text-sm text-gray-500 hover:text-gray-700">← Salas</Link>
+        <Link to={rutas.salas(sala.funeraria)} className="text-sm text-gray-500 hover:text-gray-700">← Salas</Link>
         <h2 className="mt-2 text-2xl font-bold text-gray-900">Libro de condolencias · {sala.nombre}</h2>
         <p className="mt-1 text-sm text-gray-500">
           {difunto ? `Servicio de ${difunto}. ` : ''}
@@ -61,7 +63,7 @@ const LibroCondolencias = () => {
         <p className="text-sm text-gray-600">
           Descarga el libro con el pergamino de portada y todos los mensajes, para imprimirlo o guardarlo en PDF.
         </p>
-        <a href={`/admin/pergaminos/salas/${salaId}/libro/descargar`} target="_blank" rel="noreferrer"
+        <a href={rutas.descargarLibro(salaId)} target="_blank" rel="noreferrer"
           className={`${btn.primario} shrink-0`}>
           Descargar libro
         </a>
