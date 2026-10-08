@@ -23,17 +23,34 @@ const fecha = (iso) => (iso
 // Datos para pasarle a la funeraria, una sola vez (la contraseña no se vuelve a mostrar)
 const Credenciales = ({ email, password, onCerrar }) => {
   const texto = `Panel Lazos de Vida\n${URL_LOGIN}\nEmail: ${email}\nContraseña: ${password}`;
-  const [copiado, setCopiado] = useState(false);
+  const [copiado, setCopiado] = useState(null);
+  const copiar = (que, valor) => navigator.clipboard?.writeText(valor).then(() => setCopiado(que));
   return (
     <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-      <p className="font-medium">Pásale estos datos a la funeraria. La contraseña no se vuelve a mostrar.</p>
-      <pre className="mt-2 whitespace-pre-wrap rounded bg-white/70 px-3 py-2 font-mono text-xs text-gray-800">{texto}</pre>
-      <div className="mt-3 flex gap-3">
-        <button type="button" className={btn.secundario}
-          onClick={() => navigator.clipboard?.writeText(texto).then(() => setCopiado(true))}>
-          {copiado ? 'Copiado' : 'Copiar'}
+      <p className="font-medium">Pásale estos datos a la funeraria antes de cerrar este cuadro.</p>
+      <p className="text-xs text-green-800">
+        Por seguridad la contraseña no se guarda a la vista: después no se puede volver a ver.
+        Si se pierde, se pone una nueva con «Restablecer contraseña».
+      </p>
+      <dl className="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 rounded bg-white/70 px-3 py-2 text-gray-800">
+        <dt className="text-xs text-gray-500">Entrar en</dt>
+        <dd className="font-mono text-xs break-all">{URL_LOGIN}</dd><span />
+        <dt className="text-xs text-gray-500">Email</dt>
+        <dd className="font-mono text-sm break-all">{email}</dd>
+        <button type="button" className="text-xs text-green-800 hover:underline" onClick={() => copiar('email', email)}>
+          {copiado === 'email' ? 'Copiado' : 'Copiar'}
         </button>
-        <button type="button" className="text-sm text-green-800 hover:underline" onClick={onCerrar}>Listo</button>
+        <dt className="text-xs text-gray-500">Contraseña</dt>
+        <dd className="font-mono text-base tracking-wide">{password}</dd>
+        <button type="button" className="text-xs text-green-800 hover:underline" onClick={() => copiar('password', password)}>
+          {copiado === 'password' ? 'Copiada' : 'Copiar'}
+        </button>
+      </dl>
+      <div className="mt-3 flex gap-3">
+        <button type="button" className={btn.secundario} onClick={() => copiar('todo', texto)}>
+          {copiado === 'todo' ? 'Copiado' : 'Copiar todo'}
+        </button>
+        <button type="button" className="text-sm text-green-800 hover:underline" onClick={onCerrar}>Listo, ya los pasé</button>
       </div>
     </div>
   );
@@ -48,6 +65,7 @@ const CuentasFuneraria = ({ funeraria }) => {
   const [aviso, setAviso] = useState(null);
   const [credenciales, setCredenciales] = useState(null);
   const [aDesactivar, setADesactivar] = useState(null);
+  const [aEliminar, setAEliminar] = useState(null);
   const [aRestablecer, setARestablecer] = useState(null); // { cuenta, password }
 
   const correr = async (accion) => {
@@ -77,6 +95,11 @@ const CuentasFuneraria = ({ funeraria }) => {
   const cambiarEstado = async (cuenta, isActive) => {
     const ok = await correr(() => pergaminoAdmin.actualizarCuenta(cuenta.id, { isActive }));
     if (ok) setADesactivar(null);
+  };
+
+  const eliminar = async () => {
+    const ok = await correr(() => pergaminoAdmin.eliminarCuenta(aEliminar.id));
+    if (ok) setAEliminar(null);
   };
 
   const restablecer = async () => {
@@ -148,7 +171,7 @@ const CuentasFuneraria = ({ funeraria }) => {
               <div className="flex gap-3 shrink-0">
                 <button className={btn.link} disabled={guardando}
                   onClick={() => { setCredenciales(null); setARestablecer({ cuenta: c, password: generarPassword() }); }}>
-                  Nueva contraseña
+                  Restablecer contraseña
                 </button>
                 {c.isActive ? (
                   <button className="text-sm font-medium text-gray-500 hover:text-red-600" disabled={guardando}
@@ -157,10 +180,17 @@ const CuentasFuneraria = ({ funeraria }) => {
                   <button className="text-sm font-medium text-gray-500 hover:text-gray-800" disabled={guardando}
                     onClick={() => cambiarEstado(c, true)}>Activar</button>
                 )}
+                <button className="text-sm font-medium text-gray-500 hover:text-red-600" disabled={guardando}
+                  onClick={() => setAEliminar(c)}>Eliminar</button>
               </div>
             </li>
           ))}
         </ul>
+      )}
+      {cuentas.length > 0 && (
+        <p className="text-xs text-gray-500">
+          Las contraseñas no se pueden ver después de guardarlas. Si alguien olvida la suya, usa «Restablecer contraseña» y pásale la nueva.
+        </p>
       )}
 
       <Confirmar
@@ -175,8 +205,19 @@ const CuentasFuneraria = ({ funeraria }) => {
       </Confirmar>
 
       <Confirmar
+        abierto={!!aEliminar}
+        titulo="¿Eliminar este usuario?"
+        textoConfirmar="Sí, eliminar"
+        ocupado={guardando}
+        onConfirmar={eliminar}
+        onCancelar={() => setAEliminar(null)}
+      >
+        {aEliminar && <p><span className="font-medium">{aEliminar.email}</span> deja de existir y no va a poder entrar. Los pergaminos y el libro de la funeraria no se tocan. No se puede deshacer.</p>}
+      </Confirmar>
+
+      <Confirmar
         abierto={!!aRestablecer}
-        titulo="Nueva contraseña"
+        titulo="Restablecer contraseña"
         textoConfirmar="Guardar contraseña"
         ocupado={guardando}
         onConfirmar={restablecer}

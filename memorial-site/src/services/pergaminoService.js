@@ -107,6 +107,7 @@ export const pergaminoAdmin = {
   crearCuenta: (funerariaId, data) => privado.post(`/funerarias/${funerariaId}/cuentas`, data).then(datos),
   actualizarCuenta: (id, data) => privado.put(`/cuentas/${id}`, data).then(datos),
   restablecerPassword: (id, password) => privado.post(`/cuentas/${id}/password`, { password }).then(datos),
+  eliminarCuenta: (id) => privado.delete(`/cuentas/${id}`).then(datos),
 
   // La cuenta de funeraria logueada
   yo: () => privado.get('/auth/yo').then(datos),
