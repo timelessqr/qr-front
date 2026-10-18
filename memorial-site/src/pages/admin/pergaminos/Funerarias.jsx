@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { pergaminoAdmin, mensajeError } from '../../../services/pergaminoService';
 import { btn, input, Campo, Cargando, Aviso, useCarga } from '../../../components/admin/pergaminos/ui';
+import { EditarFuneraria, EliminarFuneraria } from '../../../components/admin/pergaminos/AccionesFuneraria';
 
 const VACIA = { nombre: '', telefono: '', email: '', direccion: '', ciudad: '', pais: 'Chile' };
 
@@ -58,6 +59,8 @@ const NuevaFuneraria = ({ onCreada, onCancelar }) => {
 const Funerarias = () => {
   const navigate = useNavigate();
   const [creando, setCreando] = useState(false);
+  const [editando, setEditando] = useState(null);
+  const [eliminando, setEliminando] = useState(null);
   const { datos, cargando, error, recargar } = useCarga(() => pergaminoAdmin.listarFunerarias({ limit: 100 }), []);
   const funerarias = datos?.funerarias || [];
 
@@ -93,8 +96,8 @@ const Funerarias = () => {
         ) : (
           <ul className="divide-y divide-gray-200">
             {funerarias.map((f) => (
-              <li key={f.id}>
-                <Link to={`/admin/pergaminos/funerarias/${f.id}`} className="block px-6 py-4 hover:bg-gray-50">
+              <li key={f.id} className="flex items-center hover:bg-gray-50">
+                <Link to={`/admin/pergaminos/funerarias/${f.id}`} className="block flex-1 min-w-0 px-6 py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{f.nombre}</p>
@@ -109,11 +112,23 @@ const Funerarias = () => {
                     </div>
                   </div>
                 </Link>
+                <div className="flex gap-3 pr-6 shrink-0">
+                  <button className="text-sm font-medium text-gray-600 hover:text-gray-900" onClick={() => setEditando(f)}>Editar</button>
+                  <button className="text-sm font-medium text-gray-500 hover:text-red-600" onClick={() => setEliminando(f)}>Eliminar</button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+      {editando && (
+        <EditarFuneraria funeraria={editando} onCerrar={() => setEditando(null)}
+          onGuardada={() => { setEditando(null); recargar(); }} />
+      )}
+      {eliminando && (
+        <EliminarFuneraria funeraria={eliminando} onCerrar={() => setEliminando(null)}
+          onEliminada={() => { setEliminando(null); recargar(); }} />
+      )}
     </div>
   );
 };

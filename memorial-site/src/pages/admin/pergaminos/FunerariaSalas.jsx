@@ -2,11 +2,12 @@
 // src/pages/admin/pergaminos/FunerariaSalas.jsx - Las 4 salas de una funeraria
 // ====================================
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { pergaminoAdmin } from '../../../services/pergaminoService';
 import { btn, Cargando, Aviso, EstadoPergamino, useCarga } from '../../../components/admin/pergaminos/ui';
 import MarcaFuneraria from '../../../components/admin/pergaminos/MarcaFuneraria';
 import CuentasFuneraria from '../../../components/admin/pergaminos/CuentasFuneraria';
+import { EditarFuneraria, EliminarFuneraria } from '../../../components/admin/pergaminos/AccionesFuneraria';
 import { useRutasPergamino } from '../../../components/admin/pergaminos/rutas';
 import { funerariaSesion } from '../../../services/funerariaSesion';
 
@@ -80,6 +81,9 @@ const FunerariaSalas = () => {
   const params = useParams();
   // En el módulo de la funeraria, la funeraria es la de la sesión, no la de la URL
   const funerariaId = rutas.esFuneraria ? funerariaSesion.datos()?.funeraria?.id : params.funerariaId;
+  const navigate = useNavigate();
+  const [editando, setEditando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
   const { datos, cargando, error, recargar } = useCarga(async () => {
     const [funeraria, salas] = await Promise.all([
       pergaminoAdmin.obtenerFuneraria(funerariaId),
@@ -99,7 +103,15 @@ const FunerariaSalas = () => {
         {!rutas.esFuneraria && (
           <Link to="/admin/pergaminos" className="text-sm text-gray-500 hover:text-gray-700">← Funerarias</Link>
         )}
-        <h2 className="mt-2 text-2xl font-bold text-gray-900">{funeraria?.nombre}</h2>
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">{funeraria?.nombre}</h2>
+          {!rutas.esFuneraria && (
+            <div className="flex gap-2">
+              <button className={btn.secundario} onClick={() => setEditando(true)}>Editar datos</button>
+              <button className={btn.peligro} onClick={() => setEliminando(true)}>Eliminar funeraria</button>
+            </div>
+          )}
+        </div>
         <p className="mt-1 text-sm text-gray-500">
           {[funeraria?.codigo, funeraria?.direccion, funeraria?.ciudad, funeraria?.telefono].filter(Boolean).join(' · ')}
         </p>
@@ -113,6 +125,14 @@ const FunerariaSalas = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {[...salas].sort((a, b) => a.numero - b.numero).map((s) => <TarjetaSala key={s.id} sala={s} />)}
       </div>
+      {editando && (
+        <EditarFuneraria funeraria={funeraria} onCerrar={() => setEditando(false)}
+          onGuardada={() => { setEditando(false); recargar(); }} />
+      )}
+      {eliminando && (
+        <EliminarFuneraria funeraria={funeraria} onCerrar={() => setEliminando(false)}
+          onEliminada={() => navigate('/admin/pergaminos', { replace: true })} />
+      )}
     </div>
   );
 };
