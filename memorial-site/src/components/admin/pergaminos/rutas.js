@@ -20,7 +20,12 @@ export const useRutasPergamino = () => {
     libro: (salaId) => `${base}/salas/${salaId}/libro`,
     imprimir: (salaId) => `${base}/salas/${salaId}/imprimir`,
     descargarLibro: (salaId) => `${base}/salas/${salaId}/libro/descargar`,
-    // Página con las salas de la funeraria
-    salas: (funerariaId) => (funeraria ? '/funeraria' : `/admin/pergaminos/funerarias/${funerariaId}`),
+    // Página con las salas de la funeraria. GET /salas/:id trae la funeraria
+    // como objeto ({ id, nombre, codigo }); el listado de salas, como id
+    salas: (funeraria_) => {
+      if (funeraria) return '/funeraria';
+      const id = typeof funeraria_ === 'object' && funeraria_ !== null ? (funeraria_.id || funeraria_._id) : funeraria_;
+      return `/admin/pergaminos/funerarias/${id}`;
+    },
   };
 };

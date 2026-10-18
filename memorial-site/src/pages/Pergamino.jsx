@@ -6,6 +6,51 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { pergaminoPublico, mensajeError } from '../services/pergaminoService';
 import PergaminoView from '../components/pergamino/PergaminoView';
+import HojasPergamino from '../components/pergamino/HojasPergamino';
+import { descargarPdf } from '../components/pergamino/pdf';
+
+// Enlace discreto para guardar el pergamino (sin los mensajes del libro) en
+// PDF A4. Arma la hoja fuera de la vista solo al tocarlo.
+const DescargarPergamino = ({ pergamino }) => {
+  const [fase, setFase] = useState('quieto'); // quieto | armando | error
+  const nombre = pergamino.difunto?.nombreCompleto || 'Pergamino';
+
+  const listo = useCallback(async () => {
+    try {
+      await descargarPdf(`Pergamino - ${nombre}`);
+      setFase('quieto');
+    } catch (err) {
+      console.error('Error generando el PDF:', err);
+      setFase('error');
+    }
+  }, [nombre]);
+
+  return (
+    <div className="mx-auto max-w-xl pt-4 text-center font-serif print:hidden">
+      <button type="button" onClick={() => setFase('armando')} disabled={fase === 'armando'}
+        className="text-sm text-[#8C7F6E] underline decoration-[#C9BBA6] underline-offset-4 hover:text-[#5E544A] disabled:no-underline">
+        {fase === 'armando' ? 'Preparando el PDF…' : 'Descargar pergamino (PDF)'}
+      </button>
+      {fase === 'error' && <p className="mt-1 text-xs text-[#9C8F7E]">No se pudo generar. Intenta de nuevo.</p>}
+      {fase === 'armando' && (
+        <div aria-hidden style={{ position: 'fixed', left: '-10000px', top: 0 }}>
+          <HojasPergamino pergamino={pergamino} funeraria={pergamino.funeraria} onListo={listo} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Mensajes para quien escanea un QR que todavía no muestra nada
+const avisoDe = (error) => {
+  if (/no está publicado/i.test(error)) {
+    return ['Este pergamino todavía no está disponible.', 'La funeraria lo está preparando. Vuelve a escanear el código en unos minutos.'];
+  }
+  if (/QR no válido|no encontrado/i.test(error)) {
+    return ['Este código no corresponde a ningún pergamino.', 'Consulta con la funeraria.'];
+  }
+  return ['No pudimos mostrar este pergamino.', 'Revisa tu conexión y vuelve a intentarlo.'];
+};
 
 const campo = 'block w-full rounded-md border border-[#E3D8C8] bg-[#FBF8F3] px-4 py-3 text-lg text-[#2A2420] placeholder:text-[#9C8F7E] focus:border-[#A8875A] focus:outline-none focus:ring-1 focus:ring-[#A8875A]';
 
@@ -121,9 +166,9 @@ const Pergamino = () => {
   return (
     <main className="min-h-screen bg-[#ECE6DC] px-3 py-6 sm:py-12">
       {error ? (
-        <div className="mx-auto max-w-md px-6 text-center font-serif text-stone-700">
-          <p className="text-lg">No pudimos mostrar este pergamino.</p>
-          <p className="mt-2 text-sm text-stone-500">{error}</p>
+        <div className="mx-auto max-w-md px-6 pt-16 text-center font-serif text-[#2A2420]">
+          <p className="text-xl">{avisoDe(error)[0]}</p>
+          <p className="mt-3 text-base text-[#5E544A]">{avisoDe(error)[1]}</p>
         </div>
       ) : !pergamino ? (
         <div className="text-center font-serif text-stone-500 pt-24">
@@ -137,6 +182,7 @@ const Pergamino = () => {
             return (
               <>
                 <PergaminoView pergamino={pergamino} funeraria={pergamino.funeraria} enlaceLibro={conLibro ? '#libro' : undefined} />
+                <DescargarPergamino pergamino={pergamino} />
                 {conLibro && <LibroCondolencias code={code} />}
               </>
             );
