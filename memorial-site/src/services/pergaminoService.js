@@ -67,6 +67,9 @@ export const pergaminoAdmin = {
   listarFunerarias: (params) => privado.get('/funerarias', { params }).then(datos),
   obtenerFuneraria: (id) => privado.get(`/funerarias/${id}`).then(datos),
   crearFuneraria: (data) => privado.post('/funerarias', data).then(datos),
+  actualizarFuneraria: (id, data) => privado.put(`/funerarias/${id}`, data).then(datos),
+  // Borra la funeraria con sus salas, QR, pergaminos, libro y usuarios
+  eliminarFuneraria: (id) => privado.delete(`/funerarias/${id}`).then(datos),
 
   // Logo y colores: el backend los aplica a los pergaminos de las 4 salas
   actualizarMarca: (funerariaId, data) => privado.put(`/funerarias/${funerariaId}/marca`, data).then(datos),
