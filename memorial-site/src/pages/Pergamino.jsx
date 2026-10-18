@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom';
 import { pergaminoPublico, mensajeError } from '../services/pergaminoService';
 import PergaminoView from '../components/pergamino/PergaminoView';
 
-const campo = 'block w-full rounded-md border border-stone-300 bg-white/80 px-3 py-2 text-base text-stone-800 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500';
+const campo = 'block w-full rounded-md border border-[#E3D8C8] bg-[#FBF8F3] px-4 py-3 text-lg text-[#2A2420] placeholder:text-[#9C8F7E] focus:border-[#A8875A] focus:outline-none focus:ring-1 focus:ring-[#A8875A]';
 
 const fecha = (iso) => new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
@@ -51,7 +51,7 @@ const FormularioCondolencia = ({ code, config, onEnviada }) => {
         <p className={`text-sm ${estado.ok ? 'text-emerald-800' : 'text-red-700'}`}>{estado.texto}</p>
       )}
       <button type="submit" disabled={enviando}
-        className="w-full sm:w-auto px-6 py-2.5 rounded-md bg-stone-700 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50">
+        className="w-full px-6 py-3 rounded-md bg-[#A8875A] text-white text-lg hover:bg-[#93754C] disabled:opacity-50">
         {enviando ? 'Enviando...' : 'Dejar mensaje'}
       </button>
     </form>
@@ -76,10 +76,11 @@ const LibroCondolencias = ({ code }) => {
   if (!config || config.habilitado === false) return null;
 
   return (
-    <section className="mx-auto max-w-xl px-4 sm:px-0 mt-10 font-serif text-stone-800 print:hidden">
-      <h2 className="text-center text-sm tracking-[0.25em] text-stone-600">LIBRO DE CONDOLENCIAS</h2>
+    <section id="libro" className="mx-auto max-w-xl mt-8 px-6 py-10 sm:px-12 rounded-sm font-serif text-[#2A2420] bg-[#F6F1EA] scroll-mt-4 print:hidden"
+      style={{ boxShadow: '0 1px 2px rgba(60,50,30,.10), 0 12px 32px -12px rgba(60,50,30,.30)' }}>
+      <h2 className="text-center text-sm tracking-[0.28em] text-[#A8875A]">LIBRO DE CONDOLENCIAS</h2>
       {config.mensajeBienvenida && (
-        <p className="mt-2 text-center text-stone-600 italic">{config.mensajeBienvenida}</p>
+        <p className="mt-2 text-center text-lg italic text-[#5E544A]">{config.mensajeBienvenida}</p>
       )}
       <div className="mt-6">
         <FormularioCondolencia code={code} config={config} onEnviada={cargarMensajes} />
@@ -87,11 +88,11 @@ const LibroCondolencias = ({ code }) => {
       {mensajes.length > 0 && (
         <ul className="mt-8 space-y-4">
           {mensajes.map((m) => (
-            <li key={m.id} className="rounded-md bg-white/70 border border-stone-200 px-4 py-3">
-              <p className="whitespace-pre-line break-words leading-relaxed">{m.mensaje}</p>
-              <p className="mt-2 text-sm text-stone-600">
+            <li key={m.id} className="border-t border-[#E3D8C8] pt-4">
+              <p className="whitespace-pre-line break-words text-lg leading-relaxed">{m.mensaje}</p>
+              <p className="mt-2 text-base text-[#5E544A]">
                 — {m.nombre}{m.relacion ? `, ${m.relacion}` : ''}
-                <span className="text-stone-400"> · {fecha(m.fecha)}</span>
+                <span className="text-[#9C8F7E]"> · {fecha(m.fecha)}</span>
               </p>
             </li>
           ))}
@@ -118,7 +119,7 @@ const Pergamino = () => {
   }, [pergamino]);
 
   return (
-    <main className="min-h-screen bg-stone-100 py-8 sm:py-12">
+    <main className="min-h-screen bg-[#ECE6DC] px-3 py-6 sm:py-12">
       {error ? (
         <div className="mx-auto max-w-md px-6 text-center font-serif text-stone-700">
           <p className="text-lg">No pudimos mostrar este pergamino.</p>
@@ -131,12 +132,15 @@ const Pergamino = () => {
         </div>
       ) : (
         <>
-          <div className="px-3 sm:px-0">
-            <PergaminoView pergamino={pergamino} funeraria={pergamino.funeraria} />
-          </div>
-          {(pergamino.secciones || []).some((s) => s.key === 'condolencias' && s.visible !== false) && (
-            <LibroCondolencias code={code} />
-          )}
+          {(() => {
+            const conLibro = (pergamino.secciones || []).some((s) => s.key === 'condolencias' && s.visible !== false);
+            return (
+              <>
+                <PergaminoView pergamino={pergamino} funeraria={pergamino.funeraria} enlaceLibro={conLibro ? '#libro' : undefined} />
+                {conLibro && <LibroCondolencias code={code} />}
+              </>
+            );
+          })()}
         </>
       )}
     </main>

@@ -16,6 +16,14 @@ export const urlArchivo = (url) => {
   return url.startsWith('/') ? `${PERGAMINO_ORIGIN}${url}` : url;
 };
 
+// Para el PDF: las imágenes de R2 no traen CORS y "ensucian" el canvas, así que
+// se piden a través del backend (GET /api/archivo), que sí tiene CORS
+export const urlParaPdf = (url) => {
+  const completa = urlArchivo(url);
+  if (!completa || !/^https?:/i.test(completa) || completa.startsWith(PERGAMINO_ORIGIN)) return completa;
+  return `${PERGAMINO_API_URL}/archivo?url=${encodeURIComponent(completa)}`;
+};
+
 // Render free se duerme: el primer pedido puede tardar cerca de un minuto
 const TIMEOUT = 70000;
 

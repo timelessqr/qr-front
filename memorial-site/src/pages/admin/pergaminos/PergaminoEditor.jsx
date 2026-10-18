@@ -200,7 +200,7 @@ const PergaminoEditor = () => {
         </div>
         <div className="flex flex-wrap gap-2">
           <button className={btn.peligro} onClick={() => setConfirmarReinicio(true)} disabled={!!ocupado}>Nuevo servicio</button>
-          <button className={btn.secundario} onClick={imprimir} disabled={!!ocupado}>Imprimir</button>
+          <button className={btn.secundario} onClick={imprimir} disabled={!!ocupado}>PDF / Imprimir</button>
           <button className={btn.secundario} onClick={guardar} disabled={!!ocupado || !sinGuardar}>
             {ocupado === 'guardar' ? 'Guardando...' : 'Guardar'}
           </button>
