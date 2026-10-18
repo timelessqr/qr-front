@@ -15,7 +15,7 @@ import PergaminoView, {
 const MM = 96 / 25.4; // px por milímetro a 96 dpi
 
 // Caja de contenido dentro de la hoja (mm). Abajo queda lugar para el pie.
-const CAJA = { arriba: 20, lados: 22, abajo: 36 };
+const CAJA = { arriba: 20, lados: 22, abajo: 44 };
 const ALTO_CAJA_PX = (297 - CAJA.arriba - CAJA.abajo) * MM;
 const SEPARACION_PX = 24; // entre mensajes (space-y-6)
 
@@ -65,7 +65,7 @@ export const HojaA4 = ({ pergamino, funeraria, children, centrado = false, flore
 
       {(logo || textoPie) && (
         <footer className="absolute text-center" style={{ left: `${CAJA.lados}mm`, right: `${CAJA.lados}mm`, bottom: '14mm' }}>
-          {logo && <ImagenAjustada src={url(logo)} className="mx-auto h-14 w-[45%] mb-1" />}
+          {logo && <ImagenAjustada src={url(logo)} className="mx-auto h-20 w-[60%] mb-1" />}
           {textoPie && <p className="text-[10px] tracking-[0.25em]" style={{ color: 'var(--perg-primario)' }}>{textoPie}</p>}
         </footer>
       )}

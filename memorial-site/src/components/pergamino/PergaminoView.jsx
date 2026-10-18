@@ -230,7 +230,7 @@ const PergaminoView = ({ pergamino, funeraria, className = '', plano = false, en
       {!plano && visible('pie_funeraria') && (logo || textoPie) && (
         <footer className="pt-2">
           <Separador className="mb-5" />
-          {logo && <ImagenAjustada src={url(logo)} className="mx-auto h-16 sm:h-20 w-[60%] mb-2" />}
+          {logo && <ImagenAjustada src={url(logo)} className="mx-auto h-28 sm:h-32 w-[80%] mb-3" />}
           {textoPie && <p className="text-xs tracking-[0.25em]" style={{ color: 'var(--perg-primario)' }}>{textoPie}</p>}
         </footer>
       )}
