@@ -8,13 +8,14 @@
 // Se imprime con @page margin 0 (index.css): sin márgenes, Chrome no tiene
 // dónde poner la fecha, el título y la URL de la página.
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import PergaminoView, { variablesPergamino, logoPergamino } from './PergaminoView';
-import { urlArchivo } from '../../services/pergaminoService';
+import PergaminoView, {
+  variablesPergamino, logoPergamino, Flores, ImagenAjustada, ProveedorModoPdf, useUrlImagen,
+} from './PergaminoView';
 
 const MM = 96 / 25.4; // px por milímetro a 96 dpi
 
 // Caja de contenido dentro de la hoja (mm). Abajo queda lugar para el pie.
-const CAJA = { arriba: 20, lados: 22, abajo: 36 };
+const CAJA = { arriba: 20, lados: 22, abajo: 44 };
 const ALTO_CAJA_PX = (297 - CAJA.arriba - CAJA.abajo) * MM;
 const SEPARACION_PX = 24; // entre mensajes (space-y-6)
 
@@ -30,9 +31,11 @@ const esperarCarga = (raiz) => Promise.all([
     .map((img) => new Promise((ok) => { img.onload = ok; img.onerror = ok; })),
 ]);
 
-export const HojaA4 = ({ pergamino, funeraria, children, centrado = false }) => {
+// floresTenues: en las hojas de mensajes el texto pasa por encima de las flores
+export const HojaA4 = ({ pergamino, funeraria, children, centrado = false, floresTenues = false }) => {
   const logo = logoPergamino(pergamino, funeraria);
   const textoPie = pergamino.pie?.texto || funeraria?.nombre;
+  const url = useUrlImagen();
 
   return (
     <section
@@ -42,12 +45,13 @@ export const HojaA4 = ({ pergamino, funeraria, children, centrado = false }) => 
         width: '210mm',
         height: '297mm',
         color: 'var(--perg-texto)',
-        background: 'radial-gradient(ellipse at center, #FBF9F3 0%, var(--perg-fondo) 70%, #E9E2CF 100%)',
+        background: 'var(--perg-fondo)',
       }}
     >
+      <Flores ancho={floresTenues ? '48%' : '62%'} opacidad={floresTenues ? 0.35 : 0.9} />
       {logo && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
-          <img src={urlArchivo(logo)} alt="" className="pergamino-sello w-3/5 max-h-[40%] object-contain opacity-[0.1] grayscale mix-blend-multiply" />
+          <ImagenAjustada src={url(logo)} className="pergamino-sello w-3/5 h-[40%] opacity-[0.1] grayscale mix-blend-multiply" />
         </div>
       )}
       <div className="pointer-events-none absolute border" style={{ inset: '9mm', borderColor: 'var(--perg-linea)' }} />
@@ -61,7 +65,7 @@ export const HojaA4 = ({ pergamino, funeraria, children, centrado = false }) => 
 
       {(logo || textoPie) && (
         <footer className="absolute text-center" style={{ left: `${CAJA.lados}mm`, right: `${CAJA.lados}mm`, bottom: '14mm' }}>
-          {logo && <img src={urlArchivo(logo)} alt="" className="mx-auto h-10 max-w-[45%] object-contain mb-1" />}
+          {logo && <ImagenAjustada src={url(logo)} className="mx-auto h-20 w-[60%] mb-1" />}
           {textoPie && <p className="text-[10px] tracking-[0.25em]" style={{ color: 'var(--perg-primario)' }}>{textoPie}</p>}
         </footer>
       )}
@@ -72,15 +76,16 @@ export const HojaA4 = ({ pergamino, funeraria, children, centrado = false }) => 
 // La portada: el pergamino, achicado si no entra en la hoja (por ejemplo con foto)
 const Portada = ({ pergamino, funeraria, onLista }) => {
   const ref = useRef(null);
-  const [zoom, setZoom] = useState(1);
+  const [escala, setEscala] = useState({ factor: 1, alto: null });
 
   useLayoutEffect(() => {
     let vivo = true;
     esperarCarga(ref.current).then(() => {
       if (!vivo || !ref.current) return;
-      ref.current.style.zoom = '1'; // medir al tamaño natural
+      // scrollHeight no cambia con transform: es el alto natural
       const alto = ref.current.scrollHeight;
-      setZoom(alto > ALTO_CAJA_PX ? ALTO_CAJA_PX / alto : 1);
+      const factor = alto > ALTO_CAJA_PX ? ALTO_CAJA_PX / alto : 1;
+      setEscala({ factor, alto: alto * factor });
       onLista?.();
     });
     return () => { vivo = false; };
@@ -89,8 +94,10 @@ const Portada = ({ pergamino, funeraria, onLista }) => {
 
   return (
     <HojaA4 pergamino={pergamino} funeraria={funeraria} centrado>
-      <div ref={ref} style={{ zoom }}>
-        <PergaminoView pergamino={pergamino} funeraria={funeraria} plano />
+      <div style={{ height: escala.alto ?? undefined }}>
+        <div ref={ref} style={{ transform: `scale(${escala.factor})`, transformOrigin: 'top center' }}>
+          <PergaminoView pergamino={pergamino} funeraria={funeraria} plano />
+        </div>
       </div>
     </HojaA4>
   );
@@ -166,12 +173,12 @@ const HojasPergamino = ({ pergamino, funeraria, mensajes = [], conLibro = false,
   }, [portadaLista, paginas, conLibro, onListo]);
 
   return (
-    <>
+    <ProveedorModoPdf>
     <div className="hojas-pergamino overflow-x-auto">
       <Portada pergamino={pergamino} funeraria={funeraria} onLista={() => setPortadaLista(true)} />
 
       {conLibro && paginas?.map((indices, n) => (
-        <HojaA4 key={n} pergamino={pergamino} funeraria={funeraria}>
+        <HojaA4 key={n} pergamino={pergamino} funeraria={funeraria} floresTenues>
           {n === 0 && <EncabezadoLibro nombre={nombre} total={mensajes.length} />}
           {indices.length === 0 && n === 0 ? (
             <p className="text-center italic opacity-70">Todavía no hay mensajes en el libro.</p>
@@ -194,7 +201,7 @@ const HojasPergamino = ({ pergamino, funeraria, mensajes = [], conLibro = false,
           </div>
         </div>
       )}
-    </>
+    </ProveedorModoPdf>
   );
 };
 
